@@ -2,6 +2,7 @@
 
 import os
 from typing import Optional
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -51,6 +52,62 @@ class Settings(BaseSettings):
     RATE_LIMIT_IP_PER_MINUTE: int = 100
     CONTAINMENT_HITL_THRESHOLD: float = 0.75
 
+    @field_validator("API_PORT", mode="before")
+    @classmethod
+    def parse_api_port(cls, v):
+        if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+            return 8001
+        return int(v)
+
+    @field_validator("RATE_LIMIT_IP_PER_MINUTE", mode="before")
+    @classmethod
+    def parse_rate_limit(cls, v):
+        if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+            return 100
+        return int(v)
+
+    @field_validator("CONTAINMENT_HITL_THRESHOLD", mode="before")
+    @classmethod
+    def parse_containment_threshold(cls, v):
+        if v is None or v == "" or (isinstance(v, str) and not v.strip()):
+            return 0.75
+        return float(v)
+
+    @field_validator("SECRET_KEY", mode="before")
+    @classmethod
+    def parse_secret_key(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "b912c75a40b84742a0b1f3c834a78e72619028a1c9ef028a47814bfa4d89e271"
+        return v
+
+    @field_validator("API_HOST", mode="before")
+    @classmethod
+    def parse_api_host(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "127.0.0.1"
+        return v
+
+    @field_validator("ENVIRONMENT", mode="before")
+    @classmethod
+    def parse_environment(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "development"
+        return v
+
+    @field_validator("LOG_LEVEL", mode="before")
+    @classmethod
+    def parse_log_level(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "INFO"
+        return v
+
+    @field_validator("LLM_PROVIDER", mode="before")
+    @classmethod
+    def parse_llm_provider(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return "groq"
+        return v
+
 
 settings = Settings()
 
@@ -68,5 +125,3 @@ if settings.LANGCHAIN_API_KEY:
     os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
     os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
     os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
-
-

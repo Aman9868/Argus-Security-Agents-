@@ -3,7 +3,12 @@
 from typing import Dict, Any, Tuple
 import os
 
-DEFAULT_CONTAINMENT_THRESHOLD = float(os.getenv("CONTAINMENT_HITL_THRESHOLD", "0.75"))
+raw_threshold = os.getenv("CONTAINMENT_HITL_THRESHOLD", "0.75")
+try:
+    DEFAULT_CONTAINMENT_THRESHOLD = float(raw_threshold) if raw_threshold and raw_threshold.strip() else 0.75
+except (ValueError, TypeError):
+    DEFAULT_CONTAINMENT_THRESHOLD = 0.75
+
 
 
 class ContainmentPolicy:
