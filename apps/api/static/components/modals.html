@@ -1,0 +1,335 @@
+<!-- 1. Dossier & Copilot Briefing Modal (Fullscreen High-Res Reader) -->
+  <div class="modal-overlay" id="copilotBriefingModal" onclick="closeModalOnBackdrop(event, 'copilotBriefingModal')">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(0, 229, 255, 0.15); color: var(--neon-cyan); border: 1px solid rgba(0, 229, 255, 0.3);">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.96rem; color: #ffffff;">Analyst Copilot — Dossier & Threat Vector Assessment</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">EXECUTIVE THREAT INTELLIGENCE DOSSIER • FULL READ VIEW</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="header-pill-btn" onclick="copyBriefingContent()"><i class="fa-regular fa-copy"></i> Copy Dossier</button>
+          <button class="header-pill-btn" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+          <button class="modal-close-btn" onclick="closeModal('copilotBriefingModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="modal-body copilot-markdown-body" id="briefingModalBody" style="max-height: 75vh; overflow-y: auto;">
+        <!-- Briefing content injected here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Investigations Queue Modal -->
+  <div class="modal-overlay" id="investigationsModal" onclick="closeModalOnBackdrop(event, 'investigationsModal')">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-folder-tree" style="color: var(--neon-cyan);"></i>
+          <span style="font-weight: 800; color: #ffffff;">Investigation History & Cases (SQLite Database)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <button class="header-pill-btn" onclick="loadInvestigationsModal()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <button class="modal-close-btn" onclick="closeModal('investigationsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <table class="copilot-table-responsive" style="margin: 0;">
+          <thead>
+            <tr>
+              <th>Case ID</th>
+              <th>Target IOC</th>
+              <th>Verdict</th>
+              <th>Confidence</th>
+              <th>Discovered</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="investigationsTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">Loading investigations from database...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Incidents & Containment Registry Modal -->
+  <div class="modal-overlay" id="incidentsModal" onclick="closeModalOnBackdrop(event, 'incidentsModal')">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-shield-halved" style="color: var(--neon-green);"></i>
+          <span style="font-weight: 800; color: #ffffff;">Perimeter Containment Registry (SQLite Database)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <button class="header-pill-btn" onclick="loadIncidentsModal()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          <button class="modal-close-btn" onclick="closeModal('incidentsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <table class="copilot-table-responsive" style="margin: 0;">
+          <thead>
+            <tr>
+              <th>Record ID</th>
+              <th>Target IOC</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Enforced Rule</th>
+              <th>Control</th>
+            </tr>
+          </thead>
+          <tbody id="containmentTableBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">Loading containment records from database...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Threat Intelligence & Forensic Reports Modal -->
+  <div class="modal-overlay" id="reportsModal" onclick="closeModalOnBackdrop(event, 'reportsModal')">
+    <div class="modal-dialog modal-xl" style="max-height: 90vh;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="brand-shield-icon" style="width: 32px; height: 32px; font-size: 0.9rem;">
+            <i class="fa-solid fa-file-waveform"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 1rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Threat Intelligence Dossier</span>
+              <span id="repIocBadge" class="shortcut-badge" style="color: var(--neon-cyan); border-color: rgba(0, 229, 255, 0.4); font-size: 0.8rem;">185.220.101.45</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">
+              EVIDENCE VERIFIED · ENRICHED FROM SQLITE INTEL STORE
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div id="repContainmentStatusPill" class="status-pill-runtime" style="background: rgba(0, 230, 118, 0.12); color: #00e676; border: 1px solid rgba(0, 230, 118, 0.3);">
+            <div class="status-pill-dot" style="background: #00e676;"></div>
+            <span id="repContainmentStatusText">CONTAINED & ISOLATED</span>
+          </div>
+          <button class="modal-close-btn" onclick="closeModal('reportsModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px; overflow-y: auto;">
+        
+        <!-- Top Dossier Metric Row -->
+        <div class="soc-kpi-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;">
+          
+          <!-- Tile 1: Threat Score & Attribution -->
+          <div class="kpi-chip-card" style="padding: 12px;">
+            <div class="kpi-icon-box" style="background: rgba(255, 51, 102, 0.15); color: var(--neon-red); border: 1px solid rgba(255, 51, 102, 0.4);">
+              <i class="fa-solid fa-radiation"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">THREAT SCORE</span>
+              <span class="kpi-value-row" style="color: var(--neon-red);"><span id="repThreatScore">92</span>/100 <span class="badge-c2-high" id="repThreatLevel">CRITICAL</span></span>
+              <span style="font-size: 0.68rem; color: var(--text-dim);" id="repAttribution">UNC1151 / Storm-0558</span>
+            </div>
+          </div>
+
+          <!-- Tile 2: Multi-Engine Detections -->
+          <div class="kpi-chip-card" style="padding: 12px;">
+            <div class="kpi-icon-box" style="background: rgba(255, 145, 0, 0.15); color: var(--neon-orange); border: 1px solid rgba(255, 145, 0, 0.4);">
+              <i class="fa-solid fa-virus-covid"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">DETECTION RATIO</span>
+              <span class="kpi-value-row" style="color: var(--neon-orange); font-size: 0.85rem;" id="repVtRatio">58 / 72 Vendors</span>
+              <span style="font-size: 0.68rem; color: var(--text-dim);"><span id="repPulses">14</span> AlienVault OTX Pulses</span>
+            </div>
+          </div>
+
+          <!-- Tile 3: GeoIP & Autonomous System -->
+          <div class="kpi-chip-card" style="padding: 12px;">
+            <div class="kpi-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">
+              <i class="fa-solid fa-earth-europe"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">GEOIP & NETWORK</span>
+              <span class="kpi-value-row" style="font-size: 0.85rem;" id="repCountry">🇩🇪 Germany (Frankfurt)</span>
+              <span style="font-size: 0.68rem; color: var(--text-dim);" id="repAsn">AS60729 Stiftung Erneuerbare</span>
+            </div>
+          </div>
+
+          <!-- Tile 4: Containment Enforcement -->
+          <div class="kpi-chip-card" style="padding: 12px;">
+            <div class="kpi-icon-box" id="repContainmentIconBox" style="background: rgba(0, 230, 118, 0.15); color: var(--neon-green); border: 1px solid rgba(0, 230, 118, 0.4);">
+              <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <div class="kpi-details">
+              <span class="kpi-label">PERIMETER ISOLATION</span>
+              <span class="kpi-value-row" style="font-size: 0.85rem; color: var(--neon-green);" id="repIsolationTitle">ENFORCED IN DB</span>
+              <span style="font-size: 0.68rem; color: var(--text-dim);" id="repIsolationSub">Kernel Drop Active</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Dossier Sub-Navigation Bar -->
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 14px; gap: 8px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 6px;">
+            <button class="header-pill-btn active rep-tab-btn" onclick="switchReportTab('telemetry', this)"><i class="fa-solid fa-server"></i> Ports & Infrastructure</button>
+            <button class="header-pill-btn rep-tab-btn" onclick="switchReportTab('mitre', this)"><i class="fa-solid fa-layer-group"></i> MITRE ATT&CK & D3FEND</button>
+            <button class="header-pill-btn rep-tab-btn" onclick="switchReportTab('detection_rules', this)"><i class="fa-solid fa-file-code"></i> Sigma & YARA Rules</button>
+            <button class="header-pill-btn rep-tab-btn" onclick="switchReportTab('stix', this)"><i class="fa-solid fa-shield-virus"></i> OASIS STIX 2.1 Bundle</button>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button class="header-pill-btn active" id="downloadStixModalBtn" onclick="downloadStixBundle()"><i class="fa-solid fa-download"></i> Export STIX</button>
+            <button class="header-pill-btn" onclick="copyReportMarkdown()"><i class="fa-solid fa-copy"></i> Copy Dossier</button>
+          </div>
+        </div>
+
+        <!-- Sub-panel 1: Ports & Infrastructure Telemetry -->
+        <div class="report-tab-pane" id="repPaneTelemetry">
+          <div class="intel-grid-2col">
+            <div class="intel-subcard">
+              <div class="intel-subcard-title"><i class="fa-solid fa-network-wired"></i> Open Network Ports & Services</div>
+              <table class="copilot-table-responsive" style="margin: 0;">
+                <thead>
+                  <tr>
+                    <th>Port</th>
+                    <th>Service</th>
+                    <th>State</th>
+                    <th>Banner / Risk</th>
+                  </tr>
+                </thead>
+                <tbody id="repPortsTableBody">
+                  <tr>
+                    <td><code>443/TCP</code></td>
+                    <td>HTTPS</td>
+                    <td><span style="color: var(--neon-green);">OPEN</span></td>
+                    <td>Cobalt Strike Beacon Listener</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="intel-subcard">
+              <div class="intel-subcard-title"><i class="fa-solid fa-id-card"></i> Domain & Registrar Telemetry</div>
+              <table class="spec-table">
+                <tbody>
+                  <tr>
+                    <td>Registrar</td>
+                    <td id="repRegistrar">NameCheap, Inc.</td>
+                  </tr>
+                  <tr>
+                    <td>Registration Date</td>
+                    <td id="repRegDate">2026-08-15</td>
+                  </tr>
+                  <tr>
+                    <td>Newly Registered (NRD)</td>
+                    <td id="repNrdBadge"><span style="color: var(--neon-orange); font-weight: 700;">False</span></td>
+                  </tr>
+                  <tr>
+                    <td>Associated Malware</td>
+                    <td id="repMalwareFamilies" style="color: var(--neon-red);">Cobalt Strike, AsyncRAT</td>
+                  </tr>
+                  <tr>
+                    <td>Last Activity Seen</td>
+                    <td id="repLastSeen">2026-09-04 14:22:31 UTC</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-panel 2: MITRE ATT&CK & D3FEND -->
+        <div class="report-tab-pane" id="repPaneMitre" style="display: none;">
+          <div class="intel-grid-2col">
+            <div class="intel-subcard">
+              <div class="intel-subcard-title"><i class="fa-solid fa-crosshairs" style="color: var(--neon-orange);"></i> MITRE ATT&CK Matrix (Offensive)</div>
+              <div id="repAttckList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+
+            <div class="intel-subcard">
+              <div class="intel-subcard-title"><i class="fa-solid fa-shield-halved" style="color: var(--neon-green);"></i> MITRE D3FEND Countermeasures (Defensive)</div>
+              <div id="repD3fendList" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Filled dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-panel 3: Sigma & YARA Detection Rules -->
+        <div class="report-tab-pane" id="repPaneDetectionRules" style="display: none;">
+          <div class="intel-grid-2col">
+            <div class="intel-subcard">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="intel-subcard-title" style="margin: 0;"><i class="fa-solid fa-file-code"></i> Sigma SIEM Detection Rule</div>
+                <button class="header-pill-btn" onclick="copyCodeContent('repSigmaCode')"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <pre class="mockup-code-block" id="repSigmaCode" style="max-height: 260px; overflow-y: auto;"></pre>
+            </div>
+
+            <div class="intel-subcard">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="intel-subcard-title" style="margin: 0;"><i class="fa-solid fa-file-shield"></i> YARA Memory & Endpoint Rule</div>
+                <button class="header-pill-btn" onclick="copyCodeContent('repYaraCode')"><i class="fa-regular fa-copy"></i> Copy</button>
+              </div>
+              <pre class="mockup-code-block" id="repYaraCode" style="max-height: 260px; overflow-y: auto;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-panel 4: OASIS STIX 2.1 Bundle -->
+        <div class="report-tab-pane" id="repPaneStix" style="display: none;">
+          <div class="intel-subcard">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div class="intel-subcard-title" style="margin: 0;"><i class="fa-solid fa-shield-virus"></i> OASIS STIX 2.1 Threat Intel Package JSON</div>
+              <button class="header-pill-btn" onclick="copyCodeContent('repStixCode')"><i class="fa-regular fa-copy"></i> Copy JSON</button>
+            </div>
+            <pre class="mockup-code-block" id="repStixCode" style="max-height: 280px; overflow-y: auto;"></pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Settings Modal -->
+  <div class="modal-overlay" id="settingsModal" onclick="closeModalOnBackdrop(event, 'settingsModal')">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-gear" style="color: var(--neon-cyan);"></i>
+          <span style="font-weight: 800; color: #ffffff;">Platform Runtime & LLM Settings</span>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('settingsModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">LLM Gateway Engine</label>
+            <input type="text" class="copilot-input" style="width: 100%; margin-top: 4px;" value="Groq / Llama-3.3-70b-versatile (Fallback: Deterministic Core)" readonly>
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Containment HITL Policy Threshold</label>
+            <input type="text" class="copilot-input" style="width: 100%; margin-top: 4px;" value="0.75 (Automatic Review Trigger)" readonly>
+          </div>
+          <div>
+            <label style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">LangSmith Tracing</label>
+            <input type="text" class="copilot-input" style="width: 100%; margin-top: 4px;" value="Enabled (cyber-agent-prod project)" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       APPLICATION LOGIC & CYTOSCAPE RENDERING
+       ======================================================================== -->

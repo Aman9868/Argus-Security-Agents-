@@ -1,0 +1,604 @@
+"""Database persistence module for cyber-agent using SQLite.
+
+Manages persistent storage for:
+- Security investigations
+- Human-in-the-loop containment approvals (Quarantine records)
+- Enriched IOC Threat Intelligence Dossiers
+"""
+
+import os
+import json
+import sqlite3
+import time
+from typing import Dict, Any, List, Optional
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+DB_PATH = os.path.join(DB_DIR, "cyber_agent.db")
+
+
+def get_db_connection() -> sqlite3.Connection:
+    """Returns a SQLite connection with row factory configured."""
+    os.makedirs(DB_DIR, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH, timeout=10.0)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    """Initializes SQLite schema and seeds default intelligence records."""
+    os.makedirs(DB_DIR, exist_ok=True)
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        
+        # 1. Investigations Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS investigations (
+                id TEXT PRIMARY KEY,
+                seed_ioc TEXT NOT NULL,
+                ioc_type TEXT,
+                verdict TEXT,
+                confidence_score REAL,
+                analyst_summary TEXT,
+                total_entities INTEGER DEFAULT 0,
+                total_links INTEGER DEFAULT 0,
+                mitre_attck TEXT,
+                d3fend_countermeasures TEXT,
+                sigma_rule TEXT,
+                yara_rule TEXT,
+                stix_bundle TEXT,
+                knowledge_graph_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 2. Containment Records Table (HITL Approvals)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS containment_records (
+                id TEXT PRIMARY KEY,
+                task_id TEXT,
+                investigation_id TEXT,
+                target TEXT NOT NULL,
+                action_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                firewall_rule TEXT,
+                enforcement_details TEXT,
+                analyst_notes TEXT,
+                approved_by TEXT DEFAULT 'SOC_ANALYST',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 3. IOC Intelligence Dossiers Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ioc_intelligence (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ioc TEXT UNIQUE NOT NULL,
+                ioc_type TEXT NOT NULL,
+                threat_score INTEGER DEFAULT 0,
+                threat_level TEXT DEFAULT 'UNKNOWN',
+                attribution TEXT,
+                country TEXT,
+                country_code TEXT,
+                city TEXT,
+                asn TEXT,
+                org TEXT,
+                registrar TEXT,
+                registration_date TEXT,
+                is_nrd INTEGER DEFAULT 0,
+                open_ports TEXT,
+                c2_status TEXT,
+                malware_families TEXT,
+                virustotal_ratio TEXT,
+                alienvault_pulses INTEGER DEFAULT 0,
+                raw_dossier TEXT,
+                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 4. Generative Chameleon Deception Traps Table (Honeytokens & Decoy Sinks)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS deception_traps (
+                id TEXT PRIMARY KEY,
+                trap_type TEXT NOT NULL,
+                trap_name TEXT NOT NULL,
+                trap_value TEXT NOT NULL,
+                lure_context TEXT,
+                target_ioc TEXT,
+                status TEXT DEFAULT 'ARMED',
+                tripped_count INTEGER DEFAULT 0,
+                last_tripped_at TIMESTAMP,
+                tripped_ip TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 5. GraphRAG Multi-Hop Threat Hunt Hops Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS threat_hunt_hops (
+                hunt_id TEXT PRIMARY KEY,
+                root_ioc TEXT NOT NULL,
+                hop_depth INTEGER DEFAULT 3,
+                nodes_discovered INTEGER DEFAULT 0,
+                edges_discovered INTEGER DEFAULT 0,
+                evidence_chain_json TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        conn.commit()
+
+        # Seed initial intelligence if table is empty
+        cursor.execute("SELECT COUNT(*) as cnt FROM ioc_intelligence")
+        count = cursor.fetchone()["cnt"]
+        if count == 0:
+            seed_initial_intelligence(conn)
+
+
+def seed_initial_intelligence(conn: sqlite3.Connection):
+    """Seeds baseline realistic threat intelligence for demo and standard testing."""
+    cursor = conn.cursor()
+    
+    # Target 1: 185.220.101.45 (C2 IP)
+    ports_185 = [
+        {"port": 80, "service": "HTTP", "state": "OPEN", "banner": "nginx/1.18.0 (Ubuntu)", "c2_risk": "MEDIUM"},
+        {"port": 443, "service": "HTTPS", "state": "OPEN", "banner": "TLSv1.3 / Cobalt Strike Beacon Listener", "c2_risk": "HIGH"},
+        {"port": 8080, "service": "HTTP-PROXY", "state": "OPEN", "banner": "AsyncRAT Stager Webhook", "c2_risk": "CRITICAL"},
+        {"port": 9001, "service": "TOR-ORPORT", "state": "FILTERED", "banner": "Tor Relay Service", "c2_risk": "HIGH"}
+    ]
+    malware_185 = ["Cobalt Strike", "AsyncRAT", "Sliver C2", "RedLine Stealer"]
+    raw_185 = {
+        "ioc": "185.220.101.45",
+        "category": "Command & Control / Tor Gateway",
+        "description": "Bulletproof Tor Exit Node and active Cobalt Strike Beacon listener hosted in Frankfurt, Germany.",
+        "whois": {"registrar": "NameCheap, Inc.", "asn": "AS60729", "org": "Stiftung Erneuerbare Freiheit"},
+        "dns": {"ptr": "tor-exit-45.erneuerbare-freiheit.de", "domains": ["update-microsoft-s.net", "telemetry-sync-edge.com"]}
+    }
+
+    cursor.execute("""
+        INSERT INTO ioc_intelligence (
+            ioc, ioc_type, threat_score, threat_level, attribution, country, country_code,
+            city, asn, org, registrar, open_ports, c2_status, malware_families,
+            virustotal_ratio, alienvault_pulses, raw_dossier
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        "185.220.101.45", "IP", 92, "CRITICAL", "UNC1151 / Storm-0558 Affiliate",
+        "Germany", "DE", "Frankfurt am Main", "AS60729 Stiftung Erneuerbare Freiheit",
+        "Stiftung Erneuerbare Freiheit", "NameCheap, Inc.", json.dumps(ports_185),
+        "ACTIVE_C2_LISTENER", json.dumps(malware_185), "58 / 72 Security Vendors (Malicious)",
+        14, json.dumps(raw_185)
+    ))
+
+    # Target 2: update-microsoft-s.net (Domain)
+    raw_domain = {
+        "ioc": "update-microsoft-s.net",
+        "category": "Typosquat / Spearphishing Landing Page",
+        "description": "Deceptive lookalike domain mimicking legitimate Microsoft Windows Update telemetry endpoints.",
+        "registrar_info": {"registrar": "NameCheap, Inc.", "created": "2026-09-01", "expires": "2027-09-01", "nameservers": ["dns1.registrar-servers.com"]}
+    }
+    cursor.execute("""
+        INSERT INTO ioc_intelligence (
+            ioc, ioc_type, threat_score, threat_level, attribution, country, country_code,
+            city, asn, org, registrar, registration_date, is_nrd, open_ports, c2_status,
+            malware_families, virustotal_ratio, alienvault_pulses, raw_dossier
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        "update-microsoft-s.net", "DOMAIN", 88, "HIGH", "Lazarus Group / APT38 Mimic",
+        "Germany", "DE", "Frankfurt am Main", "AS60729 Stiftung Erneuerbare Freiheit",
+        "NameCheap Privacy Protect", "NameCheap, Inc.", "2026-09-01", 1,
+        json.dumps([{"port": 443, "service": "HTTPS", "state": "OPEN"}]),
+        "HOSTING_MALICIOUS_PAYLOAD", json.dumps(["AgentTesla", "FormBook"]),
+        "46 / 70 Security Vendors (Malicious)", 9, json.dumps(raw_domain)
+    ))
+
+    # Initial Sample Investigation
+    initial_inv_id = "INV-2026-0941"
+    cursor.execute("""
+        INSERT OR IGNORE INTO investigations (
+            id, seed_ioc, ioc_type, verdict, confidence_score, analyst_summary,
+            total_entities, total_links, mitre_attck, d3fend_countermeasures,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now', '-2 hours'))
+    """, (
+        initial_inv_id, "185.220.101.45", "IP", "MALICIOUS", 0.90,
+        "Automated multi-agent investigation confirmed 185.220.101.45 as an active Cobalt Strike C2 node operating through bulletproof German ASN 60729 with associated newly registered lookalike domains.",
+        10, 7, json.dumps(["T1071.001", "T1583.001", "T1566.002"]),
+        json.dumps(["D3-NPA", "D3-OTF", "D3-SINK", "D3-DNSR"])
+    ))
+
+    conn.commit()
+
+
+# ==============================================================================
+# INVESTIGATION STORAGE METHODS
+# ==============================================================================
+
+def save_investigation_to_db(inv_id: str, seed_ioc: str, ioc_type: str, verdict: str,
+                             confidence_score: float, analyst_summary: str,
+                             total_entities: int, total_links: int,
+                             mitre_attck: List[str], d3fend: List[str],
+                             sigma_rule: Optional[str] = None, yara_rule: Optional[str] = None,
+                             stix_bundle: Optional[Dict[str, Any]] = None,
+                             kg_json: Optional[Dict[str, Any]] = None) -> bool:
+    """Inserts or replaces an investigation record into the database."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO investigations (
+                    id, seed_ioc, ioc_type, verdict, confidence_score, analyst_summary,
+                    total_entities, total_links, mitre_attck, d3fend_countermeasures,
+                    sigma_rule, yara_rule, stix_bundle, knowledge_graph_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                inv_id, seed_ioc, ioc_type, verdict, confidence_score, analyst_summary,
+                total_entities, total_links,
+                json.dumps(mitre_attck or []),
+                json.dumps(d3fend or []),
+                sigma_rule, yara_rule,
+                json.dumps(stix_bundle) if stix_bundle else None,
+                json.dumps(kg_json) if kg_json else None
+            ))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to save investigation to DB", error=str(e), inv_id=inv_id)
+        return False
+
+
+def get_all_investigations(limit: int = 50) -> List[Dict[str, Any]]:
+    """Retrieves all investigation records ordered by timestamp."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, seed_ioc, ioc_type, verdict, confidence_score, analyst_summary,
+                       total_entities, total_links, mitre_attck, d3fend_countermeasures,
+                       created_at
+                FROM investigations
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                results.append({
+                    "id": r["id"],
+                    "seed_ioc": r["seed_ioc"],
+                    "ioc_type": r["ioc_type"],
+                    "verdict": r["verdict"],
+                    "confidence_score": r["confidence_score"],
+                    "analyst_summary": r["analyst_summary"],
+                    "total_entities": r["total_entities"],
+                    "total_links": r["total_links"],
+                    "mitre_attck": json.loads(r["mitre_attck"] or "[]"),
+                    "d3fend_countermeasures": json.loads(r["d3fend_countermeasures"] or "[]"),
+                    "created_at": r["created_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to list investigations", error=str(e))
+        return []
+
+
+def get_investigation_by_id(inv_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves full investigation including rules, STIX bundle, and knowledge graph."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM investigations WHERE id = ?", (inv_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row["id"],
+                "seed_ioc": row["seed_ioc"],
+                "ioc_type": row["ioc_type"],
+                "verdict": row["verdict"],
+                "confidence_score": row["confidence_score"],
+                "analyst_summary": row["analyst_summary"],
+                "total_entities": row["total_entities"],
+                "total_links": row["total_links"],
+                "mitre_attck": json.loads(row["mitre_attck"] or "[]"),
+                "d3fend_countermeasures": json.loads(row["d3fend_countermeasures"] or "[]"),
+                "sigma_rule": row["sigma_rule"],
+                "yara_rule": row["yara_rule"],
+                "stix_bundle": json.loads(row["stix_bundle"]) if row["stix_bundle"] else None,
+                "knowledge_graph": json.loads(row["knowledge_graph_json"]) if row["knowledge_graph_json"] else None,
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch investigation", inv_id=inv_id, error=str(e))
+        return None
+
+
+# ==============================================================================
+# CONTAINMENT / QUARANTINE STORAGE METHODS (HITL PERSISTENCE)
+# ==============================================================================
+
+def save_containment_action(task_id: str, target: str, action_type: str, status: str,
+                            firewall_rule: str, enforcement_details: Dict[str, Any],
+                            investigation_id: Optional[str] = None,
+                            analyst_notes: Optional[str] = None) -> str:
+    """Saves an enforced containment action (Quarantine) to SQLite."""
+    record_id = f"CONT-{int(time.time())}"
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO containment_records (
+                    id, task_id, investigation_id, target, action_type, status,
+                    firewall_rule, enforcement_details, analyst_notes, approved_by,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'SOC_ANALYST', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            """, (
+                record_id, task_id, investigation_id, target, action_type, status,
+                firewall_rule, json.dumps(enforcement_details or {}),
+                analyst_notes or "Perimeter isolation approved via Analyst Dashboard."
+            ))
+            conn.commit()
+            logger.info("Containment record saved to DB", record_id=record_id, target=target, status=status)
+            return record_id
+    except Exception as e:
+        logger.error("Failed to save containment record", error=str(e), target=target)
+        return record_id
+
+
+def get_all_containment_records(limit: int = 50) -> List[Dict[str, Any]]:
+    """Retrieves all quarantined entities and containment records."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM containment_records
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                results.append({
+                    "id": r["id"],
+                    "task_id": r["task_id"],
+                    "investigation_id": r["investigation_id"],
+                    "target": r["target"],
+                    "action_type": r["action_type"],
+                    "status": r["status"],
+                    "firewall_rule": r["firewall_rule"],
+                    "enforcement_details": json.loads(r["enforcement_details"] or "{}"),
+                    "analyst_notes": r["analyst_notes"],
+                    "approved_by": r["approved_by"],
+                    "created_at": r["created_at"],
+                    "updated_at": r["updated_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to list containment records", error=str(e))
+        return []
+
+
+def get_active_containment_for_target(target: str) -> Optional[Dict[str, Any]]:
+    """Checks if a target is actively quarantined in the database."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM containment_records
+                WHERE target = ? AND status IN ('APPROVED_AND_EXECUTED', 'APPLIED', 'ACTIVE')
+                ORDER BY created_at DESC
+                LIMIT 1
+            """, (target,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row["id"],
+                "target": row["target"],
+                "action_type": row["action_type"],
+                "status": row["status"],
+                "firewall_rule": row["firewall_rule"],
+                "enforcement_details": json.loads(row["enforcement_details"] or "{}"),
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to check active containment", target=target, error=str(e))
+        return None
+
+
+def revoke_containment_action(record_id: str) -> bool:
+    """Revokes a quarantine and marks rule as WITHDRAWN in DB."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE containment_records
+                SET status = 'REVOKED', updated_at = CURRENT_TIMESTAMP
+                WHERE id = ? OR target = ?
+            """, (record_id, record_id))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to revoke containment", record_id=record_id, error=str(e))
+        return False
+
+
+# ==============================================================================
+# IOC INTELLIGENCE DOSSIER METHODS
+# ==============================================================================
+
+def get_ioc_dossier_from_db(ioc: str) -> Optional[Dict[str, Any]]:
+    """Fetches high-fidelity threat intelligence dossier from SQLite."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM ioc_intelligence WHERE ioc = ?", (ioc,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "ioc": row["ioc"],
+                "ioc_type": row["ioc_type"],
+                "threat_score": row["threat_score"],
+                "threat_level": row["threat_level"],
+                "attribution": row["attribution"],
+                "country": row["country"],
+                "country_code": row["country_code"],
+                "city": row["city"],
+                "asn": row["asn"],
+                "org": row["org"],
+                "registrar": row["registrar"],
+                "registration_date": row["registration_date"],
+                "is_nrd": bool(row["is_nrd"]),
+                "open_ports": json.loads(row["open_ports"] or "[]"),
+                "c2_status": row["c2_status"],
+                "malware_families": json.loads(row["malware_families"] or "[]"),
+                "virustotal_ratio": row["virustotal_ratio"],
+                "alienvault_pulses": row["alienvault_pulses"],
+                "raw_dossier": json.loads(row["raw_dossier"] or "{}"),
+                "last_seen": row["last_seen"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch IOC dossier", ioc=ioc, error=str(e))
+        return None
+
+
+# ==============================================================================
+# GENERATIVE CHAMELEON DECEPTION STORAGE METHODS
+# ==============================================================================
+
+def save_deception_trap(trap_id: str, trap_type: str, trap_name: str, trap_value: str,
+                        lure_context: str, target_ioc: Optional[str] = None) -> bool:
+    """Inserts a new active honeytoken/decoy lure into the database."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO deception_traps (
+                    id, trap_type, trap_name, trap_value, lure_context, target_ioc, status, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, 'ARMED', CURRENT_TIMESTAMP)
+            """, (trap_id, trap_type, trap_name, trap_value, lure_context, target_ioc))
+            conn.commit()
+            logger.info("Deception trap deployed", trap_id=trap_id, trap_type=trap_type)
+            return True
+    except Exception as e:
+        logger.error("Failed to save deception trap", trap_id=trap_id, error=str(e))
+        return False
+
+
+def get_all_deception_traps(limit: int = 50) -> List[Dict[str, Any]]:
+    """Retrieves all active and historical deception lures."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, trap_type, trap_name, trap_value, lure_context, target_ioc,
+                       status, tripped_count, last_tripped_at, tripped_ip, created_at
+                FROM deception_traps
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+    except Exception as e:
+        logger.error("Failed to fetch deception traps", error=str(e))
+        return []
+
+
+def trip_deception_trap(trap_id: str, intruder_ip: str) -> Optional[Dict[str, Any]]:
+    """Records an attacker tripping a honeytoken lure, updating counter and timestamp."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE deception_traps
+                SET status = 'TRIPPED',
+                    tripped_count = tripped_count + 1,
+                    last_tripped_at = CURRENT_TIMESTAMP,
+                    tripped_ip = ?
+                WHERE id = ?
+            """, (intruder_ip, trap_id))
+            conn.commit()
+
+            cursor.execute("SELECT * FROM deception_traps WHERE id = ?", (trap_id,))
+            row = cursor.fetchone()
+            if row:
+                logger.warning("ALERT: Deception trap tripped by adversary!", trap_id=trap_id, ip=intruder_ip)
+                return dict(row)
+            return None
+    except Exception as e:
+        logger.error("Failed to trip deception trap", trap_id=trap_id, error=str(e))
+        return None
+
+
+def revoke_deception_trap(trap_id: str) -> bool:
+    """Disarms a deception lure."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE deception_traps SET status = 'REVOKED' WHERE id = ?", (trap_id,))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to revoke deception trap", trap_id=trap_id, error=str(e))
+        return False
+
+
+# ==============================================================================
+# GRAPHRAG THREAT HUNT HOPS STORAGE METHODS
+# ==============================================================================
+
+def save_threat_hunt_hop(hunt_id: str, root_ioc: str, hop_depth: int,
+                         nodes_discovered: int, edges_discovered: int,
+                         evidence_chain: List[Dict[str, Any]]) -> bool:
+    """Saves a multi-hop GraphRAG threat hunting exploration record."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO threat_hunt_hops (
+                    hunt_id, root_ioc, hop_depth, nodes_discovered, edges_discovered,
+                    evidence_chain_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (hunt_id, root_ioc, hop_depth, nodes_discovered, edges_discovered, json.dumps(evidence_chain)))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to save threat hunt hop", hunt_id=hunt_id, error=str(e))
+        return False
+
+
+def get_all_threat_hunts(limit: int = 20) -> List[Dict[str, Any]]:
+    """Retrieves previous GraphRAG threat hunting sessions."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT hunt_id, root_ioc, hop_depth, nodes_discovered, edges_discovered,
+                       evidence_chain_json, created_at
+                FROM threat_hunt_hops
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                results.append({
+                    "hunt_id": r["hunt_id"],
+                    "root_ioc": r["root_ioc"],
+                    "hop_depth": r["hop_depth"],
+                    "nodes_discovered": r["nodes_discovered"],
+                    "edges_discovered": r["edges_discovered"],
+                    "evidence_chain": json.loads(r["evidence_chain_json"] or "[]"),
+                    "created_at": r["created_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to fetch threat hunts", error=str(e))
+        return []
+
+
+# Initialize DB automatically when imported
+init_db()

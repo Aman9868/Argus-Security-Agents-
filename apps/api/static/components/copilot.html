@@ -1,0 +1,127 @@
+<!-- Floating Chat Launcher Button -->
+    <button class="copilot-launcher-btn" id="copilotLauncherBtn" onclick="toggleCopilotWidget()" title="Open Cyber Copilot AI (or use top header button)">
+      <i class="fa-solid fa-wand-magic-sparkles"></i>
+    </button>
+
+    <!-- Floating / Slide-out Copilot Window -->
+    <div class="copilot-widget-container" id="copilotWidget">
+      <div class="copilot-widget-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="copilot-header-icon-box">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.9rem; color: #ffffff;">Analyst Copilot</div>
+            <div style="font-size: 0.65rem; color: var(--neon-green); font-family: var(--font-mono); display: flex; align-items: center; gap: 5px;">
+              <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-green);"></span> AI AGENT ONLINE
+            </div>
+          </div>
+        </div>
+
+        <div class="copilot-controls-group">
+          <!-- Font Sizing -->
+          <div class="btn-pill-group" title="Adjust text size">
+            <button class="header-pill-btn" onclick="adjustCopilotFontSize(-1)" title="Smaller text">A-</button>
+            <button class="header-pill-btn" onclick="adjustCopilotFontSize(1)" title="Larger text">A+</button>
+          </div>
+
+          <!-- Wide Toggle -->
+          <button class="header-pill-btn" id="btnWidgetWide" onclick="toggleWidgetWide()" title="Toggle Wide View (820px) — Expands tables and matrices"><i class="fa-solid fa-arrows-left-right"></i> Wide</button>
+
+          <!-- Fullscreen Toggle -->
+          <button class="header-pill-btn" id="btnWidgetFullscreen" onclick="toggleWidgetFullscreen()" title="Fullscreen Dossier Reader"><i class="fa-solid fa-expand"></i></button>
+
+          <!-- Close to chat icon -->
+          <button class="widget-close-btn" onclick="toggleCopilotWidget()" title="Minimize to chat icon"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="copilot-scroll-area" id="copilotFeed">
+        
+        <!-- Mockup Message 1: Nftables Code Snippet -->
+        <div class="copilot-card">
+          <div class="copilot-card-header">
+            <span style="color: #38bdf8; font-family: var(--font-mono);"><i class="fa-solid fa-code"></i> Remediation Artifact</span>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <button class="card-action-icon-btn" onclick="copyCardText(this)" title="Copy snippet"><i class="fa-regular fa-copy"></i></button>
+              <span class="copilot-timestamp">10:30 AM</span>
+            </div>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px;">
+            If you use <strong>nftables</strong>, the quarantine logic can be enforced in a single table:
+          </div>
+          <div class="mockup-code-block">table ip quarantine {
+  chain input {
+    type filter hook input priority 0; policy drop;
+    ip saddr 185.220.101.45 drop;
+  }
+  chain output {
+    type filter hook output priority 0; policy drop;
+    ip daddr 185.220.101.45 log prefix "[SOC-C2-BLOCKED]: " drop;
+  }
+}</div>
+        </div>
+
+        <!-- Mockup Message 2: AI Analysis with Key Findings -->
+        <div class="copilot-card">
+          <div class="copilot-card-header">
+            <div class="copilot-tag-ai"><i class="fa-solid fa-brain"></i> AI Analysis</div>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              <button class="card-action-icon-btn" onclick="copyCardText(this)" title="Copy text"><i class="fa-regular fa-copy"></i></button>
+              <button class="card-action-icon-btn" onclick="openCardInModal(this)" title="Expand in modal reader"><i class="fa-solid fa-up-right-from-square"></i></button>
+              <span class="copilot-timestamp">10:32 AM</span>
+            </div>
+          </div>
+          <div style="font-size: 0.84rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">Key Findings</div>
+          <div class="findings-checklist">
+            <div class="finding-check-row">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Detected C2 communication pattern using malicious IP: <code style="color: var(--neon-cyan);">185.220.101.45</code></span>
+            </div>
+            <div class="finding-check-row">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Matches known malware infrastructure signatures (typical Cobalt Strike / AsyncRAT C2)</span>
+            </div>
+            <div class="finding-check-row">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Related to domains: <code style="color: var(--neon-cyan);">update-microsoft-s[.]net</code> registered via NameCheap</span>
+            </div>
+            <div class="finding-check-row">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Outbound telemetry indicates active beaconing (MITRE ATT&CK T1071.001)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mockup Message 3: Agent Actions -->
+        <div class="copilot-card">
+          <div class="copilot-card-header">
+            <div class="copilot-tag-agent"><i class="fa-solid fa-shield-halved"></i> Agent Actions</div>
+            <span class="copilot-timestamp">10:33 AM</span>
+          </div>
+          <div style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;">
+            Triage complete. <strong>3 perimeter entities</strong> flagged for perimeter isolation. Containment policy is pending human approval.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Action Chips (Mockup Authentic) -->
+      <div class="copilot-quick-chips">
+        <button class="copilot-chip" onclick="quickCopilotQuery('Generate iptables and nftables perimeter containment firewall rules to block 185.220.101.45')"><i class="fa-solid fa-shield-halved"></i> Firewall Rule</button>
+        <button class="copilot-chip" onclick="quickCopilotQuery('Explain C2 infrastructure topology and malware attribution for 185.220.101.45')"><i class="fa-solid fa-spider"></i> Explain C2</button>
+        <button class="copilot-chip" onclick="quickCopilotQuery('Detail MITRE D3FEND defensive mitigations and counter-measures')"><i class="fa-solid fa-shield-virus"></i> D3FEND Mitigations</button>
+        <button class="copilot-chip" onclick="quickCopilotQuery('Analyze full OSINT attack surface and core threat vectors for this target')"><i class="fa-solid fa-earth-americas"></i> Deep OSINT</button>
+        <button class="copilot-chip" onclick="quickCopilotQuery('Summarize incident forensic timeline and recommended next steps')"><i class="fa-solid fa-clipboard-list"></i> Summarize</button>
+      </div>
+
+      <div class="copilot-input-area">
+        <input type="text" id="copilotInput" class="copilot-input" placeholder="Ask a question or request analysis...">
+        <button class="copilot-send-btn" id="copilotSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       MODAL DIALOGS (BRIEFING READER, INVESTIGATIONS, INCIDENTS, REPORTS)
+       ======================================================================== -->
