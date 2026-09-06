@@ -5,11 +5,15 @@
 let copilotWidgetActive = false;
 let copilotFontSize = 13;
 
+function getCopilotFeed() {
+  return document.getElementById('copilotFeed') || document.getElementById('copilotMessages');
+}
+
 function adjustCopilotFontSize(delta) {
   copilotFontSize = Math.min(18, Math.max(10, copilotFontSize + delta));
-  const messagesBox = document.getElementById('copilotMessages');
-  if (messagesBox) {
-    messagesBox.style.fontSize = `${copilotFontSize}px`;
+  const feed = getCopilotFeed();
+  if (feed) {
+    feed.style.fontSize = `${copilotFontSize}px`;
   }
 }
 
@@ -23,7 +27,9 @@ function toggleCopilotWidget() {
     widget.classList.add('active');
     if (launcher) launcher.classList.add('hidden');
     const input = document.getElementById('copilotInput');
-    if (input) input.focus();
+    if (input) {
+      setTimeout(() => input.focus(), 150);
+    }
   } else {
     widget.classList.remove('active');
     if (launcher) launcher.classList.remove('hidden');
@@ -32,19 +38,31 @@ function toggleCopilotWidget() {
 
 function toggleWidgetWide() {
   const widget = document.getElementById('copilotWidget');
-  if (widget) widget.classList.toggle('wide-mode');
+  if (widget) widget.classList.toggle('widget-wide');
 }
 
 function toggleWidgetFullscreen() {
   const widget = document.getElementById('copilotWidget');
-  if (widget) widget.classList.toggle('fullscreen-mode');
+  if (widget) widget.classList.toggle('widget-fullscreen');
+}
+
+function safeEscapeHtml(str) {
+  if (typeof escapeHtml === 'function') return escapeHtml(str);
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function formatCopilotMarkdown(text) {
   if (!text) return '';
-  let escaped = escapeHtml(text);
-
-  escaped = escaped.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+  if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+    return marked.parse(text);
+  }
+  let escaped = safeEscapeHtml(text);
+  escaped = escaped.replace(/```([\s\S]*?)```/g, '<pre class="mockup-code-block"><code>$1</code></pre>');
   escaped = escaped.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
   escaped = escaped.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
   escaped = escaped.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
@@ -52,27 +70,70 @@ function formatCopilotMarkdown(text) {
   return escaped;
 }
 
+function copyCardText(btn) {
+  const card = btn.closest('.copilot-card');
+  if (!card) return;
+  const text = card.innerText || card.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check" style="color: var(--neon-green);"></i>';
+    setTimeout(() => { btn.innerHTML = orig; }, 1500);
+  }).catch(() => {});
+}
+
+function openCardInModal(btn) {
+  const card = btn.closest('.copilot-card');
+  if (!card) return;
+  const modal = document.getElementById('copilotBriefingModal');
+  const body = document.getElementById('briefingModalContent') || document.getElementById('briefingModalBody');
+  if (modal) {
+    if (body) body.innerHTML = card.innerHTML;
+    modal.classList.add('active');
+  }
+}
+
 function appendCopilotMessage(role, text) {
-  const messagesBox = document.getElementById('copilotMessages');
-  if (!messagesBox) return;
+  const feed = getCopilotFeed();
+  if (!feed) return;
 
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `copilot-msg ${role === 'user' ? 'user-msg' : 'agent-msg'}`;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-  const avatarDiv = document.createElement('div');
-  avatarDiv.className = 'msg-avatar';
-  avatarDiv.innerHTML = role === 'user'
-    ? '<i class="fa-solid fa-user-shield"></i>'
-    : '<i class="fa-solid fa-robot"></i>';
+  const card = document.createElement('div');
+  card.className = 'copilot-card';
 
-  const bodyDiv = document.createElement('div');
-  bodyDiv.className = 'msg-body';
-  bodyDiv.innerHTML = formatCopilotMarkdown(text);
+  if (role === 'user') {
+    card.style.borderColor = 'rgba(0, 229, 255, 0.4)';
+    card.style.background = 'rgba(0, 229, 255, 0.05)';
+    card.innerHTML = `
+      <div class="copilot-card-header">
+        <div style="color: var(--neon-cyan); font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.8rem;">
+          <i class="fa-solid fa-user-shield"></i> Security Analyst
+        </div>
+        <span class="copilot-timestamp">${timeStr}</span>
+      </div>
+      <div style="font-size: 0.84rem; color: #ffffff; line-height: 1.5; font-weight: 600;">
+        ${safeEscapeHtml(text)}
+      </div>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="copilot-card-header">
+        <div class="copilot-tag-ai"><i class="fa-solid fa-brain"></i> AI Agent Response</div>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <button class="card-action-icon-btn" onclick="copyCardText(this)" title="Copy text"><i class="fa-regular fa-copy"></i></button>
+          <button class="card-action-icon-btn" onclick="openCardInModal(this)" title="Expand in modal reader"><i class="fa-solid fa-up-right-from-square"></i></button>
+          <span class="copilot-timestamp">${timeStr}</span>
+        </div>
+      </div>
+      <div class="copilot-markdown-body">
+        ${formatCopilotMarkdown(text)}
+      </div>
+    `;
+  }
 
-  msgDiv.appendChild(avatarDiv);
-  msgDiv.appendChild(bodyDiv);
-  messagesBox.appendChild(msgDiv);
-  messagesBox.scrollTop = messagesBox.scrollHeight;
+  feed.appendChild(card);
+  feed.scrollTop = feed.scrollHeight;
 }
 
 async function sendCopilot() {
@@ -84,16 +145,21 @@ async function sendCopilot() {
   appendCopilotMessage('user', query);
   input.value = '';
 
-  const messagesBox = document.getElementById('copilotMessages');
+  const feed = getCopilotFeed();
+  if (!feed) return;
+
   const loadingDiv = document.createElement('div');
-  loadingDiv.className = 'copilot-msg agent-msg';
+  loadingDiv.className = 'copilot-card';
   loadingDiv.id = 'copilotThinkingBubble';
+  loadingDiv.style.borderColor = 'rgba(0, 229, 255, 0.3)';
   loadingDiv.innerHTML = `
-    <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
-    <div class="msg-body"><i class="fa-solid fa-spinner fa-spin"></i> Reasoning with LangGraph supervisor...</div>
+    <div style="display: flex; align-items: center; gap: 10px; color: var(--neon-cyan); font-size: 0.82rem; font-family: var(--font-mono);">
+      <i class="fa-solid fa-circle-notch fa-spin"></i>
+      <span>Reasoning with LangGraph Multi-Agent Runtime...</span>
+    </div>
   `;
-  messagesBox.appendChild(loadingDiv);
-  messagesBox.scrollTop = messagesBox.scrollHeight;
+  feed.appendChild(loadingDiv);
+  feed.scrollTop = feed.scrollHeight;
 
   try {
     let resp = await fetch('/api/chat/message', {
@@ -156,21 +222,30 @@ function quickCopilotQuery(promptText) {
 }
 
 // Bind send button and Enter key listeners
-document.addEventListener('DOMContentLoaded', () => {
+function bindCopilotEventListeners() {
   const sendBtn = document.getElementById('copilotSendBtn');
   if (sendBtn) {
-    sendBtn.onclick = sendCopilot;
+    sendBtn.onclick = (e) => {
+      e.preventDefault();
+      sendCopilot();
+    };
   }
   const input = document.getElementById('copilotInput');
   if (input) {
-    input.addEventListener('keydown', (e) => {
+    input.onkeydown = (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendCopilot();
       }
-    });
+    };
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindCopilotEventListeners);
+} else {
+  bindCopilotEventListeners();
+}
 
 window.sendCopilot = sendCopilot;
 window.quickCopilotQuery = quickCopilotQuery;
@@ -178,3 +253,5 @@ window.toggleCopilotWidget = toggleCopilotWidget;
 window.adjustCopilotFontSize = adjustCopilotFontSize;
 window.toggleWidgetWide = toggleWidgetWide;
 window.toggleWidgetFullscreen = toggleWidgetFullscreen;
+window.copyCardText = copyCardText;
+window.openCardInModal = openCardInModal;

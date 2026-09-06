@@ -248,6 +248,20 @@ class LLMGateway:
                     "```"
                 )
 
+            if "invoice" in user_text or "docx" in user_text or ("containment" in user_text and "entity" in user_text):
+                return (
+                    "### 🛡️ Threat Entity Containment Dossier: `invoice.docx`\n\n"
+                    "- **Classification:** Weaponized Lure Attachment (Initial Access Dropper)\n"
+                    "- **File Family:** Office Open XML macro-dropper (`SHA256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`)\n"
+                    "- **Observed TTPs:** MITRE ATT&CK **T1566.001** (Spearphishing Attachment), **T1059.005** (VBA Macro Execution), **T1071.001** (C2 Beaconing via `185.220.101.45`)\n"
+                    "- **Payload Payload Behavior:** Macro drops obfuscated DLL into `%APPDATA%\\Local\\Temp` and triggers `rundll32.exe` to connect to C2.\n\n"
+                    "#### 🔒 Recommended Immediate Containment Actions:\n"
+                    "1. **Host Isolation:** Quarantine endpoints where `invoice.docx` was downloaded or opened via EDR sensor.\n"
+                    "2. **Tenant Mailbox Purge:** Initiate Graph API / M365 Hard Purge matching message subject and attachment hash.\n"
+                    "3. **Perimeter C2 Severance:** Enforce firewall block for IP `185.220.101.45:443`.\n"
+                    "4. **EDR Hash Blacklist:** Push hash ban rule enterprise-wide to terminate any running spawned processes."
+                )
+
             # Default contextual analyst response
             return (
                 f"### 🛡️ Cyber Sentinel Analysis\n\n"
