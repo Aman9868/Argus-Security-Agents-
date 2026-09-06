@@ -77,3 +77,4 @@ def test_arena_simulation_lazarus():
     assert "Lazarus" in result["adversary"]
     assert result["summary"] != ""
     assert isinstance(result["sigma_rules"], list)
+

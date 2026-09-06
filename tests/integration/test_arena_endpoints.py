@@ -64,3 +64,4 @@ async def test_arena_match_not_found():
     async with AsyncClient(transport=transport, base_url="http://127.0.0.1:8001") as client:
         resp = await client.get("/api/arena/match/non-existent-match-id-999")
         assert resp.status_code == 404
+

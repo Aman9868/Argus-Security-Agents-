@@ -1,6 +1,28 @@
-# Cyber Sentinel — Multi-Agent Cybersecurity Platform
+# Argus Security Agents — Cyber Sentinel XDR Platform
 
-An autonomous multi-agent security investigation platform (Threat Hunting & TIP, OSINT Footprinting, Phishing Triage, and Vulnerability Intelligence) orchestrated with **LangGraph**, **FastAPI**, a **Central Tool Gateway (RBAC & Idempotency)**, **Enterprise Security Guardrails AI**, **PII & Internal Secret Masking**, and a **SOC Analyst Operations Dashboard**.
+> **Next-Generation Autonomous Multi-Agent Cybersecurity Platform**  
+> *Smarter Detection · Faster Response · Autonomous Defense · Safer Tomorrow*
+
+[![Python 3.12](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![Cytoscape.js](https://img.shields.io/badge/Graph_Viz-Cytoscape.js-brightgreen.svg)](https://js.cytoscape.org/)
+[![Guardrails AI](https://img.shields.io/badge/Security-Guardrails_AI-red.svg)](https://github.com/guardrails-ai/guardrails)
+[![Tests Passing](https://img.shields.io/badge/Tests-37%20Passed-success.svg)](#-test-verification)
+
+---
+
+## 🌟 Executive Overview
+
+**Argus Security Agents (Cyber Sentinel XDR)** is a state-of-the-art autonomous multi-agent cybersecurity operations platform. Engineered on **LangGraph**, **FastAPI**, and modern **XDR Operations Architecture**, Argus orchestrates specialized AI agents capable of end-to-end incident investigation, cross-subgraph pivoting, proactive cyber deception, and adversarial red vs. blue self-play.
+
+### Key Capabilities at a Glance:
+1. **Autonomous Adversarial Arena (Red vs. Blue Self-Play)**: Pits Red Agent adversary emulation (APT29, FIN7, Lazarus Group) against Blue Agent defenders in multi-round duels, calculating real-time Time-to-Detect (TTD ms) and synthesizing verified Sigma detection rules.
+2. **Generative Chameleon Honeytokens & Deception Sinks**: Dynamically deploys contextual decoy credentials (fake AWS keys, canary database strings, decoy JWTs) to bait and trap lateral movement attempts.
+3. **GraphRAG Multi-Hop Deep Threat Hunting**: Recursive 3-hop graph traversal uncovering hidden C2 infrastructure, bulletproof hosting networks, and shared registrant footprints.
+4. **Dual Threat Infrastructure Visualization**: High-resolution interactive Cytoscape.js threat graph coupled with a Leaflet & D3 cyber world map displaying real-time geographic attack origin telemetry.
+5. **Human-in-the-Loop (HITL) Containment Gateway**: Strict RBAC-enforced safety policies preventing unverified quarantine actions while allowing sub-second containment when approved.
+6. **Enterprise Guardrails AI & PII Masking**: Real-time interception of prompt injections, jailbreaks, and sensitive internal IP topology leaks.
 
 ---
 
@@ -8,89 +30,182 @@ An autonomous multi-agent security investigation platform (Threat Hunting & TIP,
 
 ```mermaid
 flowchart TD
-    subgraph UI_API ["Frontend & API Layer"]
-        User["SOC Analyst / REST Client"] --> Main["FastAPI App (127.0.0.1:8001)"]
-        Main --> SecHeaders["Security Headers & Rate Limiting"]
-        SecHeaders --> Guardrails["Guardrails AI (Prompt Injection & Secrets)"]
+    subgraph UI_API ["Frontend & API Gateway Layer"]
+        Analyst["SOC Analyst / SecOps Team"] --> Dashboard["Argus SOC Dashboard (Port 8001)"]
+        Dashboard --> API["FastAPI REST & WebSocket Gateway"]
+        API --> SecHeaders["Security Headers & Rate Limiting"]
+        SecHeaders --> Guardrails["Guardrails AI Engine (Jailbreak & Secret Interception)"]
     end
 
-    subgraph LangGraph_Core ["Multi-Agent Orchestration Layer"]
-        Guardrails --> Supervisor["Supervisor Router Node"]
-        Supervisor --> State["Shared CyberSessionState & NetworkX Knowledge Graph"]
-        Supervisor <-->|Pivots & Entity Queues| SubThreat["Threat Hunt / TIP Subgraph"]
-        Supervisor <-->|Pivots & Entity Queues| SubOSINT["OSINT Subgraph"]
-        Supervisor <-->|Pivots & Entity Queues| SubPhish["Phishing Triage Subgraph"]
-        Supervisor <-->|Pivots & Entity Queues| SubVuln["Vulnerability Intel Subgraph"]
+    subgraph Orchestration ["LangGraph Multi-Agent Orchestration"]
+        Guardrails --> Supervisor["Supervisor Router Agent"]
+        Supervisor --> SharedState["Shared CyberSessionState & Knowledge Graph"]
+        
+        Supervisor <-->|Pivots & Entity Queues| AgentThreat["Threat Hunt & TIP Subgraph"]
+        Supervisor <-->|Pivots & Entity Queues| AgentOSINT["OSINT Footprinting Subgraph"]
+        Supervisor <-->|Pivots & Entity Queues| AgentPhish["Phishing Triage Subgraph"]
+        Supervisor <-->|Pivots & Entity Queues| AgentVuln["Vulnerability Intel Subgraph"]
     end
 
-    subgraph Security_Gateway ["Tool Gateway & Security Layer"]
-        SubThreat --> ToolGW["Central Tool Gateway"]
-        SubOSINT --> ToolGW
-        SubPhish --> ToolGW
-        SubVuln --> ToolGW
-        ToolGW --> RBAC["RBAC Permission Matrix (AgentRole)"]
-        ToolGW --> Idempotency["Idempotency & Rate Limit Cache"]
-        ToolGW --> HITL["HITL Safety Gate (Containment Approval)"]
+    subgraph Deception_Arena ["Frontier Autonomous Defense Modules"]
+        Supervisor <--> Arena["Adversarial Arena (Red vs. Blue Self-Play)"]
+        Supervisor <--> Deception["Chameleon Honeytoken Engine"]
+        Arena --> SigmaGen["Sigma Rule Synthesis Engine"]
     end
 
-    subgraph External_Tools ["Intelligence & Defensive Tools"]
-        ToolGW --> VT["VirusTotal API (4/min cache)"]
-        ToolGW --> OTX["AlienVault OTX API"]
-        ToolGW --> Abuse["abuse.ch (URLhaus/Bazaar)"]
-        ToolGW --> MITRE["MITRE ATT&CK Mapper"]
-        ToolGW --> OSINTTools["crt.sh & dnstwist"]
-        ToolGW --> NVD["NVD / CISA KEV"]
-        HITL --> Containment["Containment Actions (Block IP/Firewall)"]
+    subgraph Security_Gateway ["Tool Gateway & Safety Controls"]
+        AgentThreat --> ToolGW["Central Tool Gateway"]
+        AgentOSINT --> ToolGW
+        AgentPhish --> ToolGW
+        AgentVuln --> ToolGW
+        
+        ToolGW --> RBAC["RBAC Least-Privilege Policy"]
+        ToolGW --> Idempotency["TTL Cache & Idempotency Layer"]
+        ToolGW --> HITL["HITL Safety Gate (Human Authorization)"]
     end
 
-    subgraph Output_Sanitization ["Output Masking & Reporting"]
-        Supervisor --> PIIMask["PII & Internal Subnet Masking"]
-        PIIMask --> AnalystReport["Unified Investigation Report & Graph Viz"]
+    subgraph External_Intel ["Defensive Telemetry & Providers"]
+        ToolGW --> VT["VirusTotal API (Cached 4 req/min)"]
+        ToolGW --> OTX["AlienVault OTX & Pulses"]
+        ToolGW --> Abuse["abuse.ch (URLhaus / Bazaar)"]
+        ToolGW --> MITRE["MITRE ATT&CK & D3FEND"]
+        ToolGW --> NVD["NVD / CISA KEV Exploited DB"]
+        HITL --> Containment["Network & Endpoint Containment"]
+    end
+
+    subgraph Visualization ["Storage & Visual Operations"]
+        SharedState --> SQLite[(SQLite Cyber Intelligence DB)]
+        SharedState --> CytoGraph["Cytoscape.js Threat Infrastructure"]
+        SharedState --> GeoMap["Leaflet / D3 Global Attack Map"]
     end
 ```
 
 ---
 
-## 🛡️ Enterprise Security & Guardrails
+## ⚔️ Autonomous Adversarial Arena (Red vs. Blue)
 
-- **Tool Gateway with RBAC**: Each agent runs with strict least-privilege permissions (`AgentRole`). Threat Hunters and OSINT analysts cannot trigger active containment tools (`block_ip`, `quarantine_domain`).
-- **Idempotency & Rate Limiting**: All intelligence tool calls are cached with TTL to prevent burning third-party API rate limits (e.g. VirusTotal 4 req/min free limit).
-- **Enterprise Guardrails AI Engine**: Intercepts prompt injections, jailbreaks (`DAN` mode, rule bypasses), system prompt exfiltration, and prohibited credential submissions.
-- **PII & Internal Topology Masking**: Automatically redacts RFC 1918 internal IP ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), API keys, and sensitive tokens from analyst reports and logs.
-- **Human-in-the-Loop (HITL) Containment**: High-impact containment actions (`BLOCK_IP`, `QUARANTINE_DOMAIN`) require explicit human authorization before perimeter execution.
+The **Adversarial Arena** provides autonomous Breach & Attack Simulation (BAS) telemetry without generating weaponized malware:
+
+- **Red Agent Personas**:
+  - **APT29 / Cozy Bear**: State-sponsored espionage, OAuth consent lures, timestomping, and masqueraded TLS C2 beaconing.
+  - **FIN7 / Carbanak Group**: Financial syndicate, weaponized macro attachments, reflective DLL injection, and encrypted 7z POS exfiltration.
+  - **Lazarus Group / APT38**: Crypto-theft & critical infrastructure disruption, supply chain npm postinstall hooks, LSASS memory dumping, and high-entropy DNS tunneling.
+- **Blue Agent Defenses**:
+  - Emulates 3 posture profiles: `Strict Zero-Trust`, `Balanced SOC`, and `Aggressive Autonomous`.
+  - Calculates sub-second **Time-to-Detect (TTD in ms)** per round.
+  - Executes instant containment (host isolation, token revocation, firewall perimeter block).
+  - Automatically synthesizes **production-ready Sigma detection rules** in YAML format.
 
 ---
 
-## 🚀 Quickstart
+## 🍯 Generative Chameleon Deception Operations
 
-### 1. Environment Setup
+Argus actively deploys dynamic honeytoken decoys into simulated production assets:
+- **Canary AWS Access Keys**: `AKIA...` tokens monitored for unauthorized AWS STS queries.
+- **Decoy JDBC Connection Strings**: Monitored for rogue SQL reconnaissance.
+- **Canary JWT Auth Tokens**: Signed with trapped sub claims alerting when parsed.
+- **Canary Web Endpoints**: Hidden admin/metrics endpoints triggering automated IP containment upon probe.
 
+---
+
+## 📁 Repository Structure
+
+```
+cyber-agent/
+├── agents/
+│   ├── arena/               # Adversarial Arena Red vs Blue engine
+│   │   ├── __init__.py
+│   │   └── engine.py        # Kill-chain emulation & Sigma synthesis
+│   ├── osint/               # OSINT & domain footprinting subgraph
+│   ├── phishing/            # Phishing triage & email header analysis
+│   ├── supervisor/          # LangGraph supervisor router
+│   ├── threat_hunt/         # Threat intelligence & MITRE mapping
+│   └── vuln/                # CVE, CVSS, and CISA KEV intelligence
+├── apps/
+│   └── api/
+│       ├── main.py          # FastAPI application entrypoint
+│       ├── routes/          # Modular API route controllers
+│       │   ├── arena.py     # Adversarial Arena endpoints
+│       │   ├── chat.py      # Guardrail-protected chat
+│       │   ├── deception.py # Chameleon honeytoken deployment
+│       │   ├── hitl.py      # Human-in-the-loop review
+│       │   └── investigation.py
+│       └── static/          # Segregated high-performance web dashboard
+│           ├── assets/      # SVG maps and branding icons
+│           ├── components/  # Modular HTML dialogs (arena, deception, copilot)
+│           ├── css/         # Modular styles (styles.css)
+│           ├── js/          # Segregated client orchestrators
+│           │   ├── app.js
+│           │   ├── arena.js
+│           │   ├── copilot.js
+│           │   ├── deception.js
+│           │   └── graph.js
+│           └── index.html   # Lean main dashboard shell
+├── core/
+│   ├── gateway/             # Central Tool Gateway with RBAC & cache
+│   ├── permissions/         # AgentRole permission matrices
+│   └── state/               # Shared CyberSessionState models
+├── security/
+│   └── guardrails_engine.py # Prompt injection & secret leakage shields
+├── storage/
+│   └── db.py                # SQLite persistence (investigations, arena, traps)
+└── tests/
+    ├── integration/         # API & supervisor cross-routing tests
+    └── unit/                # Engine, permissions, and tool unit tests
+```
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- Python 3.12+
+- Node.js (optional, for asset linting)
+
+### 2. Environment Setup
 ```bash
-cd /home/itsam/Projects/cyber-agent
+git clone https://github.com/Aman9868/Argus-Security-Agents-.git
+cd Argus-Security-Agents-
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Configure your environment variables:
+```bash
 cp .env.example .env
 ```
+Supported API keys (deterministic offline fallbacks enabled by default):
+- `GROQ_API_KEY`: Ultra-fast inference with Llama-3.3-70b
+- `GEMINI_API_KEY`: Google Gemini Flash fallback
+- `LANGCHAIN_API_KEY`: LangSmith tracing (`cyber-agent-prod`)
+- Threat intel keys (optional): `VIRUSTOTAL_API_KEY`, `OTX_API_KEY`, `SHODAN_API_KEY`
 
-Your `.env` already reuses existing keys from `banking-agent`:
-- `GROQ_API_KEY`: Groq Llama-3.3-70b & Llama-3.1-8b
-- `GEMINI_API_KEY`: Google Gemini 2.5 Flash fallback
-- `LANGCHAIN_API_KEY`: LangSmith tracing project `cyber-agent-prod`
-- Free tier threat intel keys (optional): `VIRUSTOTAL_API_KEY`, `OTX_API_KEY`, `SHODAN_API_KEY`, `NVD_API_KEY`
+### 3. Launch Platform
+```bash
+uvicorn apps.api.main:app --host 127.0.0.1 --port 8001 --reload
+```
+Navigate to **`http://127.0.0.1:8001`** in your browser.
 
-### 2. Run Tests
+---
+
+## 🧪 Test Verification
+
+Run the full automated test suite (unit tests, integration tests, security guardrails):
 
 ```bash
 pytest tests/ -v
 ```
 
-100% test coverage with deterministic offline fallback for all threat intelligence providers and LLMs.
-
-### 3. Launch the Platform
-
-```bash
-uvicorn apps.api.main:app --host 127.0.0.1 --port 8001 --reload
+```
+======================= 37 passed in 15.66s =======================
 ```
 
-Open [http://127.0.0.1:8001](http://127.0.0.1:8001) in your browser to access the SOC Analyst Dashboard.
+- `test_arena_engine.py`: Multi-stage APT duel simulation, scoring, and Sigma generation.
+- `test_arena_endpoints.py`: Match replay, history retrieval, and persona catalog.
+- `test_api_endpoints.py`: Health checks, guardrail prompt injection interception, and HITL approvals.
+- `test_supervisor_cross_routing.py`: Dynamic cross-subgraph state transitions.
+- `test_guardrails.py`: Protection against jailbreaks, prompt injection, and credential exfiltration.
 
 ---
 
@@ -99,27 +214,29 @@ Open [http://127.0.0.1:8001](http://127.0.0.1:8001) in your browser to access th
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/health` | Service health and provider status |
-| `POST` | `/api/chat` | Protected analyst chat with Guardrails AI |
-| `POST` | `/api/investigation/run` | Triggers autonomous multi-agent investigation |
-| `GET` | `/api/investigation/{id}/graph` | Retrieves Cytoscape.js knowledge graph elements |
-| `GET` | `/api/hitl/pending` | Lists staged containment actions awaiting approval |
+| `POST` | `/api/investigation/run` | Triggers autonomous multi-agent investigation on target IOC |
+| `GET` | `/api/investigation/{id}/graph` | Retrieves Cytoscape.js knowledge graph nodes and edges |
+| `POST` | `/api/chat` | Analyst Copilot chat with Guardrails AI protection |
+| `GET` | `/api/hitl/pending` | Lists staged containment actions awaiting human approval |
 | `POST` | `/api/hitl/review` | Approves or rejects a staged containment action |
+| `POST` | `/api/arena/simulate` | Executes Red vs. Blue Adversarial Arena duel |
+| `GET` | `/api/arena/history` | Fetches history of past arena combat simulations |
+| `GET` | `/api/arena/match/{id}` | Replays round-by-round duel telemetry and Sigma rules |
+| `GET` | `/api/arena/personas` | Lists supported APT adversary personas and defensive postures |
+| `GET` | `/api/deception/traps` | Lists active Chameleon honeytokens and trip status |
+| `POST` | `/api/deception/deploy` | Deploys a new decoy honeytoken into the environment |
+| `POST` | `/api/deception/trip` | Simulates an intruder probing an active honeytoken |
 
 ---
 
-## 🔍 Investigation Subgraphs
+## 🔒 Security & Safe AI Practices
 
-1. **Threat Hunting & TIP (`agents/threat_hunt`)**:
-   - Seeds target IOC, queries VirusTotal, OTX, abuse.ch, maps behaviors to MITRE ATT&CK techniques.
-   - Extracts emergent lookalike domains and C2 infrastructure into the cross-subgraph pivot queue.
-2. **OSINT Subgraph (`agents/osint`)**:
-   - Queries `crt.sh` for certificate transparency logs and `dnstwist` for typosquatting/homoglyph attacks.
-   - Correlates discovered subdomains and lookalikes into the shared knowledge graph.
-3. **Phishing Subgraph (`agents/phishing`)**:
-   - Analyzes RFC 5322 email headers for SPF/DKIM/DMARC authentication and spoofing.
-   - Extracts embedded URLs, scores risk, and pivots extracted origin IPs to the threat hunt subgraph.
-4. **Vulnerability Subgraph (`agents/vuln`)**:
-   - Queries NVD CVSS scores and CISA Known Exploited Vulnerabilities (KEV) catalog.
-5. **Supervisor Agent (`agents/supervisor`)**:
-   - Evaluates accumulated state and pivot queues, routing dynamically between subgraphs when new entity types emerge, culminating in a unified incident synthesis.
+- **Strict Breach & Attack Simulation (BAS) Safety**: Red agent activities simulate telemetry signatures, log events, and network packets. No actual weaponized exploit binaries or harmful payload scripts are compiled or distributed.
+- **SQL Injection Immunization**: All SQLite database interactions strictly use parameterized queries (`?`).
+- **Least Privilege Enforcement**: Subgraph agents are constrained by explicit RBAC rules. Threat analysis agents cannot perform perimeter firewall changes without HITL authorization.
+- **PII & RFC 1918 Masking**: Enterprise internal subnet ranges and secrets are masked prior to presenting data in UI components or external reports.
 
+---
+
+## 📄 License
+Licensed under the [Apache License 2.0](LICENSE).
