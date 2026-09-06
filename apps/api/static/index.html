@@ -36,7 +36,15 @@
     <nav class="nav-links">
       <a class="nav-item" href="javascript:void(0)" onclick="navigateTo('home')"><i class="fa-solid fa-house"></i> Home</a>
       <a class="nav-item active" id="navThreatAnalysis" href="javascript:void(0)" onclick="navigateTo('threat-analysis')"><i class="fa-solid fa-crosshairs"></i> Threat Analysis</a>
-      <a class="nav-item" href="javascript:void(0)" onclick="openArenaModal()"><i class="fa-solid fa-swords" style="color: #ff3366;"></i> Adversarial Arena</a>
+      
+      <div style="font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding: 8px 12px 3px;">Autonomous Agents</div>
+      <a class="nav-item" id="navQuishing" href="javascript:void(0)" onclick="openQuishingModal()"><i class="fa-solid fa-qrcode" style="color: var(--neon-cyan);"></i> Quishing &amp; Phishing</a>
+      <a class="nav-item" id="navMalware" href="javascript:void(0)" onclick="openMalwareModal()"><i class="fa-solid fa-microchip" style="color: #c084fc;"></i> Payload Dissector</a>
+      <a class="nav-item" id="navArena" href="javascript:void(0)" onclick="openArenaModal()"><i class="fa-solid fa-swords" style="color: #ff3366;"></i> Adversarial Arena</a>
+      <a class="nav-item" id="navAttackPath" href="javascript:void(0)" onclick="triggerAttackPathSim()"><i class="fa-solid fa-fire-flame-curved" style="color: #ff9100;"></i> Attack Path Sim</a>
+      <a class="nav-item" id="navCopilot" href="javascript:void(0)" onclick="toggleCopilotWidget()"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--neon-cyan);"></i> AI Copilot</a>
+
+      <div style="font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); padding: 8px 12px 3px;">SOC Operations</div>
       <a class="nav-item" href="javascript:void(0)" onclick="openInvestigations()"><i class="fa-solid fa-folder-tree"></i> Investigations</a>
       <a class="nav-item" href="javascript:void(0)" onclick="openIncidents()"><i class="fa-solid fa-triangle-exclamation"></i> Incidents</a>
       <a class="nav-item" href="javascript:void(0)" onclick="focusIocSearch()"><i class="fa-solid fa-magnifying-glass"></i> IOC Search</a>
@@ -89,26 +97,6 @@
       </div>
 
       <div class="top-header-right">
-        <button class="arena-nav-btn" onclick="openArenaModal()" title="Launch Autonomous Adversarial Arena (Red vs. Blue Self-Play)" style="background: linear-gradient(135deg, rgba(255, 51, 102, 0.22), rgba(0, 229, 255, 0.18)); border: 1px solid rgba(255, 51, 102, 0.45); color: #ffffff; padding: 6px 13px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all 0.2s ease;">
-          <i class="fa-solid fa-swords" style="color: #ff3366;"></i>
-          <span>Adversarial Arena</span>
-        </button>
-
-        <button class="malware-nav-btn" onclick="openMalwareModal()" title="Static Binary & Payload Dissection Agent (Reverse Engineering)" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(0, 229, 255, 0.18)); border: 1px solid rgba(168, 85, 247, 0.45); color: #ffffff; padding: 6px 13px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all 0.2s ease;">
-          <i class="fa-solid fa-microchip" style="color: #c084fc;"></i>
-          <span>Payload Dissector</span>
-        </button>
-
-        <button class="quishing-nav-btn" onclick="openQuishingModal()" title="Autonomous Quishing (QR Phishing) & Advanced Email Forensics" style="background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(59, 130, 246, 0.18)); border: 1px solid rgba(0, 229, 255, 0.45); color: #ffffff; padding: 6px 13px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all 0.2s ease;">
-          <i class="fa-solid fa-qrcode" style="color: var(--neon-cyan);"></i>
-          <span>Quishing &amp; Phishing</span>
-        </button>
-
-        <button class="copilot-nav-btn" onclick="toggleCopilotWidget()" title="Toggle Cyber Copilot (or click floating launcher)">
-          <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--neon-cyan);"></i>
-          <span>AI Copilot</span>
-        </button>
-
         <div class="status-pill-runtime">
           <div class="status-pill-dot"></div>
           <span>Multi-Agent Runtime ACTIVE</span>
