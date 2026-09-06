@@ -53,8 +53,11 @@ function renderSingleDeceptionTrap(t, prepend) {
   row.id = `trap-row-${t.id}`;
   row.style.cssText = 'background: #081122; border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 8px; padding: 10px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 6px;';
 
-  const isTripped = t.status === 'TRIPPED';
-  const statusColor = isTripped ? '#ff3366' : '#00e676';
+  const tripActionHtml = isTripped
+    ? `<span style="font-size: 8.5px; color: #ff3366; font-weight: 800; background: rgba(255, 51, 102, 0.12); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255, 51, 102, 0.3);"><i class="fa-solid fa-skull-crossbones"></i> Tripped: ${escapeHtml(t.tripped_ip || '185.220.101.45')}</span>`
+    : `<button onclick="simulateTrapTrip('${t.id}')" style="background: rgba(255, 51, 102, 0.15); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.35); border-radius: 4px; padding: 3px 8px; font-size: 8.5px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
+        <i class="fa-solid fa-crosshairs"></i> Simulate Trip
+      </button>`;
 
   row.innerHTML = `
     <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -63,10 +66,8 @@ function renderSingleDeceptionTrap(t, prepend) {
     </div>
     <div style="font-size: 9.5px; color: #94a3b8; font-family: monospace; word-break: break-all; background: #030712; padding: 4px 6px; border-radius: 4px;">${escapeHtml(t.trap_value)}</div>
     <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
-      <span style="font-size: 8.5px; color: #64748b;">${escapeHtml(t.lure_context || 'Armed')}</span>
-      <button onclick="simulateTrapTrip('${t.id}')" style="background: rgba(255, 51, 102, 0.15); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.35); border-radius: 4px; padding: 3px 7px; font-size: 8.5px; font-weight: 700; cursor: pointer;">
-        <i class="fa-solid fa-crosshairs"></i> Simulate Trip
-      </button>
+      <span style="font-size: 8.5px; color: #64748b;">${escapeHtml(t.lure_context || 'Armed in environment')}</span>
+      ${tripActionHtml}
     </div>
   `;
 
