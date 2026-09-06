@@ -333,7 +333,8 @@ function setGraphView(mode) {
 }
 
 async function triggerGraphRAGHunt(targetIoc) {
-  const ioc = targetIoc || (document.getElementById('searchInput') ? document.getElementById('searchInput').value.trim() : '') || 'update-microsoft-security.com';
+  const searchEl = document.getElementById('iocSearchInput') || document.getElementById('searchInput');
+  const ioc = targetIoc || (searchEl ? searchEl.value.trim() : '') || 'update-microsoft-security.com';
   const btn = document.getElementById('btnGraphRAGHunt');
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {

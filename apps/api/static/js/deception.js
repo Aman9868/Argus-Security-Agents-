@@ -3,7 +3,8 @@
 // =========================================================================
 
 async function deployChameleonTrap(trapType) {
-  const ioc = (document.getElementById('searchInput') ? document.getElementById('searchInput').value.trim() : '') || 'update-microsoft-security.com';
+  const searchEl = document.getElementById('iocSearchInput') || document.getElementById('searchInput');
+  const ioc = (searchEl ? searchEl.value.trim() : '') || 'update-microsoft-security.com';
   try {
     const resp = await fetch('/api/deception/generate', {
       method: 'POST',

@@ -83,8 +83,8 @@
     <!-- Top Universal Search Header -->
     <header class="top-header">
       <div class="search-box-wrapper" id="topSearchWrapper">
-        <i class="fa-solid fa-magnifying-glass search-icon" id="topSearchIcon"></i>
-        <input type="text" id="iocSearchInput" class="search-input" placeholder="Search indicators, IPs, domains, hashes, or threat actors..." value="185.220.101.45">
+        <i class="fa-solid fa-magnifying-glass search-icon" id="topSearchIcon" onclick="triggerRun()" title="Search indicator" style="cursor: pointer;"></i>
+        <input type="text" id="iocSearchInput" class="search-input" placeholder="Search indicators, IPs, domains, hashes, or threat actors..." value="185.220.101.45" onkeydown="if(event.key==='Enter') triggerRun();">
         <span class="shortcut-badge">⌘ K</span>
       </div>
 
