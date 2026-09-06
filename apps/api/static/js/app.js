@@ -503,6 +503,29 @@ document.addEventListener('DOMContentLoaded', () => {
 // SIDEBAR NAVIGATION & MODAL CONTROLLERS
 // =========================================================================
 
+function toggleThreatAnalysisDropdown(e) {
+  if (e) e.stopPropagation();
+  const submenu = document.getElementById('threatAnalysisSubmenu');
+  const chevron = document.getElementById('threatDropdownChevron');
+  if (!submenu) return;
+  const isCurrentlyHidden = submenu.style.display === 'none';
+  submenu.style.display = isCurrentlyHidden ? 'flex' : 'none';
+  if (chevron) {
+    if (isCurrentlyHidden) {
+      chevron.classList.remove('rotated');
+    } else {
+      chevron.classList.add('rotated');
+    }
+  }
+}
+
+function navigateToThreatGraph() {
+  navigateTo('threat-analysis');
+  document.querySelectorAll('.nav-submenu .nav-sub-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('subNavItemGraph');
+  if (el) el.classList.add('active');
+}
+
 function navigateTo(viewName) {
   document.querySelectorAll('.nav-links .nav-item').forEach(el => el.classList.remove('active'));
   
@@ -512,6 +535,10 @@ function navigateTo(viewName) {
   if (viewName === 'home' || viewName === 'threat-analysis') {
     const navEl = document.getElementById('navThreatAnalysis') || document.querySelector('.nav-links .nav-item:nth-child(2)');
     if (navEl) navEl.classList.add('active');
+    const submenu = document.getElementById('threatAnalysisSubmenu');
+    if (submenu) submenu.style.display = 'flex';
+    const chevron = document.getElementById('threatDropdownChevron');
+    if (chevron) chevron.classList.remove('rotated');
     if (typeof setGraphView === 'function') setGraphView('graph');
     if (typeof cy !== 'undefined' && cy) cy.fit(null, 45);
   }

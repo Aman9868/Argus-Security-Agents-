@@ -150,6 +150,69 @@
       color: var(--neon-cyan);
     }
 
+    .nav-dropdown-wrapper {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-dropdown-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-chevron {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .nav-chevron.rotated {
+      transform: rotate(-90deg);
+    }
+
+    .nav-submenu {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 10px;
+      margin: 4px 0 6px 16px;
+      border-left: 2px solid rgba(0, 229, 255, 0.25);
+      transition: all 0.2s ease;
+    }
+
+    .nav-sub-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 5px;
+      color: var(--text-dim);
+      font-size: 0.77rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .nav-sub-item i {
+      font-size: 0.8rem;
+      width: 16px;
+      text-align: center;
+    }
+
+    .nav-sub-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .nav-sub-item.active {
+      background: rgba(0, 229, 255, 0.12);
+      color: #ffffff;
+      border-left: 2px solid var(--neon-cyan);
+      font-weight: 600;
+    }
+
     .sidebar-footer {
       padding: 14px;
       border-top: 1px solid var(--border-color);
@@ -3496,4 +3559,117 @@
       justify-content: center;
       font-size: 1rem;
       flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+       QUISHING & ARENA ADVANCED TAB & INPUT CONTROLS
+       ========================================================================== */
+    .quish-tab-container {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(10, 17, 34, 0.95);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 5px;
+    }
+
+    .quish-tab-btn,
+    .arena-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #94a3b8;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .quish-tab-btn:hover,
+    .arena-tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+    }
+
+    .quish-tab-btn.active,
+    .arena-tab.active {
+      background: linear-gradient(135deg, rgba(0, 229, 255, 0.25), rgba(59, 130, 246, 0.22));
+      border: 1px solid rgba(0, 229, 255, 0.55);
+      color: #00e5ff;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.22);
+    }
+
+    .quish-preset-chip,
+    .btn-tool {
+      background: rgba(10, 18, 35, 0.9) !important;
+      border: 1px solid rgba(0, 229, 255, 0.25) !important;
+      color: #cbd5e1 !important;
+      font-size: 0.72rem !important;
+      font-weight: 600 !important;
+      padding: 6px 12px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      transition: all 0.15s ease !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      outline: none !important;
+      font-family: inherit !important;
+    }
+
+    .quish-preset-chip:hover,
+    .btn-tool:hover {
+      background: rgba(0, 229, 255, 0.16) !important;
+      border-color: var(--neon-cyan) !important;
+      color: #ffffff !important;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.35) !important;
+    }
+
+    .quish-preset-chip:active,
+    .btn-tool:active {
+      transform: scale(0.97);
+    }
+
+    .quish-textarea {
+      width: 100%;
+      background: #050b18 !important;
+      border: 1px solid rgba(0, 229, 255, 0.28) !important;
+      border-radius: 8px !important;
+      color: #e2e8f0 !important;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace !important;
+      font-size: 0.76rem !important;
+      line-height: 1.55 !important;
+      padding: 10px 12px !important;
+      resize: vertical !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 229, 255, 0.35) #0c1424;
+    }
+
+    .quish-textarea:focus {
+      border-color: var(--neon-cyan) !important;
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.35) !important;
+    }
+
+    .quish-textarea::-webkit-scrollbar {
+      width: 7px;
+    }
+    .quish-textarea::-webkit-scrollbar-track {
+      background: #0c1424;
+      border-radius: 4px;
+    }
+    .quish-textarea::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.35);
+      border-radius: 4px;
+    }
+    .quish-textarea::-webkit-scrollbar-thumb:hover {
+      background: var(--neon-cyan);
     }
