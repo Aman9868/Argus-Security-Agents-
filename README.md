@@ -8,9 +8,22 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![Cytoscape.js](https://img.shields.io/badge/Graph_Viz-Cytoscape.js-brightgreen.svg)](https://js.cytoscape.org/)
 [![Guardrails AI](https://img.shields.io/badge/Security-Guardrails_AI-red.svg)](https://github.com/guardrails-ai/guardrails)
-[![Tests Passing](https://img.shields.io/badge/Tests-49%20Passed-success.svg)](#-test-verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-72%20Passed-success.svg)](#-test-verification)
 
 ---
+
+## 🖥️ Cyber Sentinel SOC Operations Platform
+
+| Argus SOC Operations Center | Threat Infrastructure Graph & World Map |
+| :---: | :---: |
+| ![Argus SOC Operations Center](docs/screenshots/soc_analyst_dashboard.png) | ![Threat Infrastructure Graph & World Map](docs/screenshots/threat_infrastructure_graph.png) |
+
+| Autonomous Quishing & Phishing Pipeline | Adversarial Arena & Blast Radius | Analyst AI Copilot |
+| :---: | :---: | :---: |
+| ![Quishing & Phishing Pipeline](docs/screenshots/quishing_phishing_pipeline.png) | ![Adversarial Arena & Blast Radius](docs/screenshots/adversarial_arena_blast_radius.png) | ![Analyst AI Copilot](docs/screenshots/analyst_copilot_chat.png) |
+
+---
+
 
 ## 🌟 Executive Overview
 
@@ -84,7 +97,39 @@ flowchart TD
 
 ---
 
+## 🗺️ Master Multi-Agent Architecture (LangGraph)
+
+Below is the complete multi-agent execution graph across all autonomous subgraphs, generated directly from the compiled LangGraph state machines:
+
+<p align="center">
+  <img src="docs/graphs/cyber_graph_full.png" alt="LangGraph Master Multi-Agent Architecture" width="100%" />
+</p>
+
+### Autonomous Subgraphs & Specialized Agents
+
+| Threat Hunting & TIP Subgraph | OSINT Footprinting Subgraph |
+| :---: | :---: |
+| ![Threat Hunt Subgraph](docs/graphs/threat_hunt_subgraph.png) | ![OSINT Subgraph](docs/graphs/osint_subgraph.png) |
+
+| Phishing & Quishing Triage Subgraph | Vulnerability Intelligence Subgraph |
+| :---: | :---: |
+| ![Phishing Subgraph](docs/graphs/phishing_subgraph.png) | ![Vuln Subgraph](docs/graphs/vuln_subgraph.png) |
+
+### High-Level Supervisor Routing Overview
+
+<p align="center">
+  <img src="docs/graphs/supervisor_overview.png" alt="Supervisor Routing Overview" width="75%" />
+</p>
+
+> **Diagram Regeneration**: You can regenerate and update all LangGraph architecture diagrams at any time using:
+> ```bash
+> python scripts/generate_graphs.py
+> ```
+
+---
+
 ## ⚔️ Autonomous Adversarial Arena (Red vs. Blue)
+
 
 The **Adversarial Arena** provides autonomous Breach & Attack Simulation (BAS) telemetry without generating weaponized malware:
 
@@ -207,7 +252,7 @@ Supported API keys (deterministic offline fallbacks enabled by default):
 - `GROQ_API_KEY`: Ultra-fast inference with Llama-3.3-70b
 - `GEMINI_API_KEY`: Google Gemini Flash fallback
 - `LANGCHAIN_API_KEY`: LangSmith tracing (`cyber-agent-prod`)
-- Threat intel keys (optional): `VIRUSTOTAL_API_KEY`, `OTX_API_KEY`, `SHODAN_API_KEY`
+- Threat intel keys (optional): `ABUSEIPDB_API_KEY`, `VIRUSTOTAL_API_KEY`, `OTX_API_KEY`, `SHODAN_API_KEY`, `NVD_API_KEY`
 
 ### 3. Launch Platform
 ```bash
@@ -226,10 +271,12 @@ pytest tests/ -v
 ```
 
 ```
-======================= 37 passed in 15.66s =======================
+======================= 72 passed, 32 warnings in 15.56s =======================
+```
 ```
 
 - `test_arena_engine.py`: Multi-stage APT duel simulation, scoring, and Sigma generation.
+
 - `test_arena_endpoints.py`: Match replay, history retrieval, and persona catalog.
 - `test_api_endpoints.py`: Health checks, guardrail prompt injection interception, and HITL approvals.
 - `test_supervisor_cross_routing.py`: Dynamic cross-subgraph state transitions.

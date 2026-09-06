@@ -1,0 +1,58 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	supervisor_router(supervisor_router)
+	synthesizer(synthesizer)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> supervisor_router;
+	osint\3aosint_correlator --> supervisor_router;
+	phishing\3aphishing_verdict --> supervisor_router;
+	supervisor_router -.-> osint\3aosint_intake;
+	supervisor_router -.-> phishing\3aphishing_intake;
+	supervisor_router -.-> synthesizer;
+	supervisor_router -.-> threat_hunt\3ahunt_intake;
+	supervisor_router -.-> vuln\3avuln_intake;
+	threat_hunt\3ahunt_hitl_gate --> supervisor_router;
+	vuln\3avuln_correlator --> supervisor_router;
+	synthesizer --> __end__;
+	subgraph threat_hunt
+	threat_hunt\3ahunt_intake(hunt_intake)
+	threat_hunt\3ahunt_planner(hunt_planner)
+	threat_hunt\3ahunt_tool_executor(hunt_tool_executor)
+	threat_hunt\3ahunt_correlator(hunt_correlator)
+	threat_hunt\3ahunt_hitl_gate(hunt_hitl_gate)
+	threat_hunt\3ahunt_correlator --> threat_hunt\3ahunt_hitl_gate;
+	threat_hunt\3ahunt_intake --> threat_hunt\3ahunt_planner;
+	threat_hunt\3ahunt_planner --> threat_hunt\3ahunt_tool_executor;
+	threat_hunt\3ahunt_tool_executor --> threat_hunt\3ahunt_correlator;
+	end
+	subgraph osint
+	osint\3aosint_intake(osint_intake)
+	osint\3aosint_executor(osint_executor)
+	osint\3aosint_correlator(osint_correlator)
+	osint\3aosint_executor --> osint\3aosint_correlator;
+	osint\3aosint_intake --> osint\3aosint_executor;
+	end
+	subgraph phishing
+	phishing\3aphishing_intake(phishing_intake)
+	phishing\3aphishing_header(phishing_header)
+	phishing\3aphishing_link(phishing_link)
+	phishing\3aphishing_verdict(phishing_verdict)
+	phishing\3aphishing_header --> phishing\3aphishing_link;
+	phishing\3aphishing_intake --> phishing\3aphishing_header;
+	phishing\3aphishing_link --> phishing\3aphishing_verdict;
+	end
+	subgraph vuln
+	vuln\3avuln_intake(vuln_intake)
+	vuln\3avuln_query(vuln_query)
+	vuln\3avuln_correlator(vuln_correlator)
+	vuln\3avuln_intake --> vuln\3avuln_query;
+	vuln\3avuln_query --> vuln\3avuln_correlator;
+	end
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc
