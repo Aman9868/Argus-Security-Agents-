@@ -129,6 +129,23 @@ def init_db():
             )
         """)
 
+        # 6. Autonomous Adversarial Arena Simulations Table (Red vs. Blue Self-Play)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS arena_simulations (
+                match_id TEXT PRIMARY KEY,
+                adversary_persona TEXT NOT NULL,
+                defense_posture TEXT NOT NULL,
+                rounds_count INTEGER DEFAULT 3,
+                detection_rate REAL DEFAULT 0.0,
+                avg_ttd_ms INTEGER DEFAULT 0,
+                red_score INTEGER DEFAULT 0,
+                blue_score INTEGER DEFAULT 0,
+                rounds_json TEXT NOT NULL,
+                sigma_rules_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         conn.commit()
 
         # Seed initial intelligence if table is empty
@@ -600,5 +617,103 @@ def get_all_threat_hunts(limit: int = 20) -> List[Dict[str, Any]]:
         return []
 
 
+# ==============================================================================
+# AUTONOMOUS ADVERSARIAL ARENA STORAGE METHODS (RED VS. BLUE)
+# ==============================================================================
+
+def save_arena_simulation(match_data: Dict[str, Any]) -> bool:
+    """Inserts a completed adversarial arena match record into SQLite."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO arena_simulations (
+                    match_id, adversary_persona, defense_posture, rounds_count,
+                    detection_rate, avg_ttd_ms, red_score, blue_score,
+                    rounds_json, sigma_rules_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                match_data["match_id"],
+                match_data["adversary_persona"],
+                match_data["defense_posture"],
+                match_data.get("rounds_count", 3),
+                match_data.get("detection_rate", 0.0),
+                match_data.get("avg_ttd_ms", 0),
+                match_data.get("red_score", 0),
+                match_data.get("blue_score", 0),
+                json.dumps(match_data.get("rounds", [])),
+                json.dumps(match_data.get("sigma_rules", []))
+            ))
+            conn.commit()
+            logger.info("Adversarial arena match saved", match_id=match_data["match_id"])
+            return True
+    except Exception as e:
+        logger.error("Failed to save arena simulation", match_id=match_data.get("match_id"), error=str(e))
+        return False
+
+
+def get_all_arena_simulations(limit: int = 20) -> List[Dict[str, Any]]:
+    """Retrieves past adversarial duel records from SQLite."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT match_id, adversary_persona, defense_posture, rounds_count,
+                       detection_rate, avg_ttd_ms, red_score, blue_score,
+                       rounds_json, sigma_rules_json, created_at
+                FROM arena_simulations
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                results.append({
+                    "match_id": r["match_id"],
+                    "adversary_persona": r["adversary_persona"],
+                    "defense_posture": r["defense_posture"],
+                    "rounds_count": r["rounds_count"],
+                    "detection_rate": r["detection_rate"],
+                    "avg_ttd_ms": r["avg_ttd_ms"],
+                    "red_score": r["red_score"],
+                    "blue_score": r["blue_score"],
+                    "rounds": json.loads(r["rounds_json"] or "[]"),
+                    "sigma_rules": json.loads(r["sigma_rules_json"] or "[]"),
+                    "created_at": r["created_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to fetch arena simulations", error=str(e))
+        return []
+
+
+def get_arena_simulation_by_id(match_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves detailed round telemetry and rules for a specific duel."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM arena_simulations WHERE match_id = ?", (match_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "match_id": row["match_id"],
+                "adversary_persona": row["adversary_persona"],
+                "defense_posture": row["defense_posture"],
+                "rounds_count": row["rounds_count"],
+                "detection_rate": row["detection_rate"],
+                "avg_ttd_ms": row["avg_ttd_ms"],
+                "red_score": row["red_score"],
+                "blue_score": row["blue_score"],
+                "rounds": json.loads(row["rounds_json"] or "[]"),
+                "sigma_rules": json.loads(row["sigma_rules_json"] or "[]"),
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch arena simulation by ID", match_id=match_id, error=str(e))
+        return None
+
+
 # Initialize DB automatically when imported
 init_db()
+

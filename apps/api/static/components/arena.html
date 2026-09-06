@@ -1,0 +1,111 @@
+<!-- ========================================================================= -->
+<!-- ADVERSARIAL ARENA MODAL (RED-TEAM VS. BLUE-TEAM SELF-PLAY) -->
+<!-- ========================================================================= -->
+<div class="modal-overlay" id="arenaModal" onclick="closeModalOnBackdrop(event, 'arenaModal')">
+  <div class="modal-window arena-modal-window" style="max-width: 1100px; width: 95%; max-height: 90vh; background: #050b18; border: 1px solid rgba(0, 229, 255, 0.35); box-shadow: 0 0 40px rgba(0, 229, 255, 0.15); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden;">
+    
+    <!-- Arena Modal Header -->
+    <div class="modal-header" style="background: linear-gradient(90deg, #130713 0%, #071324 100%); padding: 16px 20px; border-bottom: 1px solid rgba(255, 51, 102, 0.3); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(255, 51, 102, 0.15); border: 1px solid #ff3366; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: #ff3366;">
+          <i class="fa-solid fa-swords"></i>
+        </div>
+        <div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">ADVERSARIAL ARENA: RED-TEAM VS. BLUE-TEAM</div>
+          <div style="font-size: 0.72rem; color: #94a3b8;">Autonomous AI Self-Play & Detection Rule Synthesis Engine</div>
+        </div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal('arenaModal')" style="background: transparent; border: none; color: #94a3b8; font-size: 1.1rem; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Arena Controls Bar -->
+    <div style="padding: 12px 20px; background: #071020; border-bottom: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <div>
+          <span style="font-size: 0.72rem; color: #ff3366; font-weight: 800; text-transform: uppercase; margin-right: 6px;">Red Persona:</span>
+          <select id="arenaPersonaSelect" style="background: #040814; border: 1px solid rgba(255, 51, 102, 0.4); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; outline: none;">
+            <option value="APT29">APT29 / Cozy Bear (State Espionage)</option>
+            <option value="FIN7">FIN7 / Carbanak (Financial Syndicate)</option>
+            <option value="LAZARUS">Lazarus Group / APT38 (Crypto Theft)</option>
+          </select>
+        </div>
+        <div>
+          <span style="font-size: 0.72rem; color: #00e5ff; font-weight: 800; text-transform: uppercase; margin-right: 6px;">Defense Posture:</span>
+          <select id="arenaPostureSelect" style="background: #040814; border: 1px solid rgba(0, 229, 255, 0.4); color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700; outline: none;">
+            <option value="Strict Zero-Trust">Strict Zero-Trust (Ultra-Low Latency)</option>
+            <option value="Balanced SOC" selected>Balanced SOC (Correlated Response)</option>
+            <option value="Aggressive Autonomous">Aggressive Autonomous (Instant Containment)</option>
+          </select>
+        </div>
+      </div>
+      <button id="btnLaunchDuel" onclick="runAdversarialDuel()" style="background: linear-gradient(135deg, #ff3366 0%, #a855f7 50%, #00e5ff 100%); color: #fff; border: none; padding: 6px 16px; border-radius: 6px; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);">
+        <i class="fa-solid fa-play"></i> <span>Launch Autonomous Duel</span>
+      </button>
+    </div>
+
+    <!-- Match Scoreboard Strip -->
+    <div style="padding: 10px 20px; background: #030712; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+      <div style="background: #081122; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255, 51, 102, 0.25);">
+        <div style="font-size: 0.65rem; color: #ff3366; font-weight: 800; text-transform: uppercase;">Red Team Score</div>
+        <div id="arenaRedScore" style="font-size: 1.2rem; font-weight: 800; color: #ff3366;">0 PTS</div>
+      </div>
+      <div style="background: #081122; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(0, 229, 255, 0.25);">
+        <div style="font-size: 0.65rem; color: #00e5ff; font-weight: 800; text-transform: uppercase;">Blue Team Score</div>
+        <div id="arenaBlueScore" style="font-size: 1.2rem; font-weight: 800; color: #00e5ff;">0 PTS</div>
+      </div>
+      <div style="background: #081122; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(0, 230, 118, 0.25);">
+        <div style="font-size: 0.65rem; color: #00e676; font-weight: 800; text-transform: uppercase;">Detection Rate</div>
+        <div id="arenaDetectionRate" style="font-size: 1.2rem; font-weight: 800; color: #00e676;">-- %</div>
+      </div>
+      <div style="background: #081122; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.25);">
+        <div style="font-size: 0.65rem; color: #f59e0b; font-weight: 800; text-transform: uppercase;">Avg Time to Detect</div>
+        <div id="arenaAvgTtd" style="font-size: 1.2rem; font-weight: 800; color: #f59e0b;">-- ms</div>
+      </div>
+    </div>
+
+    <!-- Split-Screen Live Combat Stream -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px 20px; flex: 1; overflow-y: auto; background: #030610;">
+      
+      <!-- Left: Red Team Attack Stream -->
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 51, 102, 0.3); padding-bottom: 6px;">
+          <span style="font-size: 0.78rem; font-weight: 800; color: #ff3366; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-skull-crossbones"></i> Red Agent (Adversary Emulation)</span>
+          <span class="badge-c2-high" style="font-size: 0.65rem;">OFFENSIVE TELEMETRY</span>
+        </div>
+        <div id="arenaRedStream" style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="padding: 20px; text-align: center; color: #64748b; font-size: 0.8rem; background: #060b18; border-radius: 8px; border: 1px dashed rgba(255, 51, 102, 0.2);">
+            Click <strong>Launch Autonomous Duel</strong> to start red-team kill chain emulation.
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Blue Team Defense Stream -->
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 229, 255, 0.3); padding-bottom: 6px;">
+          <span style="font-size: 0.78rem; font-weight: 800; color: #00e5ff; text-transform: uppercase; letter-spacing: 0.5px;"><i class="fa-solid fa-shield-halved"></i> Blue Agent (Autonomous SOC Defender)</span>
+          <span class="status-badge-approved" style="font-size: 0.65rem;">REAL-TIME CONTAINMENT</span>
+        </div>
+        <div id="arenaBlueStream" style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="padding: 20px; text-align: center; color: #64748b; font-size: 0.8rem; background: #060b18; border-radius: 8px; border: 1px dashed rgba(0, 229, 255, 0.2);">
+            Awaiting red agent attack signals to synthesize detection and containment.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Arena Footer Actions -->
+    <div style="padding: 12px 20px; background: #060c18; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; align-items: center; justify-content: space-between;">
+      <span id="arenaStatusSummary" style="font-size: 0.74rem; color: #94a3b8;">Ready to simulate autonomous adversary duel.</span>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="copyArenaSigmaRules()" style="background: rgba(0, 229, 255, 0.12); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 6px; padding: 5px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+          <i class="fa-solid fa-copy"></i> Copy Synthesized Sigma Rules
+        </button>
+        <button onclick="closeModal('arenaModal')" style="background: #111d33; color: #fff; border: 1px solid #1e3a5f; border-radius: 6px; padding: 5px 14px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">
+          Close Arena
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
