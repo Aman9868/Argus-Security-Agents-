@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     OTX_API_KEY: Optional[str] = None
     SHODAN_API_KEY: Optional[str] = None
     NVD_API_KEY: Optional[str] = None
+    ABUSEIPDB_API_KEY: Optional[str] = None
 
     # Rate Limiting & Safety Thresholds
     RATE_LIMIT_IP_PER_MINUTE: int = 100
@@ -60,9 +61,12 @@ if settings.GEMINI_MODEL:
     os.environ["GEMINI_MODEL"] = settings.GEMINI_MODEL
 if settings.GROQ_API_KEY:
     os.environ["GROQ_API_KEY"] = settings.GROQ_API_KEY
+if settings.ABUSEIPDB_API_KEY:
+    os.environ["ABUSEIPDB_API_KEY"] = settings.ABUSEIPDB_API_KEY
 if settings.LANGCHAIN_API_KEY:
     os.environ["LANGCHAIN_TRACING_V2"] = settings.LANGCHAIN_TRACING_V2
     os.environ["LANGCHAIN_ENDPOINT"] = settings.LANGCHAIN_ENDPOINT
     os.environ["LANGCHAIN_API_KEY"] = settings.LANGCHAIN_API_KEY
     os.environ["LANGCHAIN_PROJECT"] = settings.LANGCHAIN_PROJECT
+
 
