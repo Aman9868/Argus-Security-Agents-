@@ -1,0 +1,92 @@
+<!-- Autonomous Attack Path & Blast Radius Simulation Modal -->
+<div class="modal-overlay" id="attackPathModal" onclick="closeModalOnBackdrop(event, 'attackPathModal')">
+  <div class="modal-dialog modal-lg" style="max-width: 950px; width: 92vw;">
+    <div class="modal-header" style="border-bottom: 1px solid rgba(255, 145, 0, 0.3);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="kpi-icon-box" style="background: rgba(255, 145, 0, 0.15); color: #ff9100; border: 1px solid rgba(255, 145, 0, 0.4);">
+          <i class="fa-solid fa-fire-flame-curved"></i>
+        </div>
+        <div>
+          <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+            <span>Autonomous Attack Path &amp; Blast Radius Predictor</span>
+            <span class="shortcut-badge" id="simTargetBadge" style="color: #ff9100; border-color: rgba(255, 145, 0, 0.4);">185.220.101.45</span>
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">MONTE CARLO LATERAL MOVEMENT SIMULATION (500 ITERATIONS) &bull; CROWN JEWEL REACHABILITY</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="header-pill-btn" onclick="overlayAttackPathOnGraph()" style="background: rgba(255, 145, 0, 0.15); color: #ff9100; border-color: rgba(255, 145, 0, 0.4);">
+          <i class="fa-solid fa-diagram-project"></i> Overlay on Threat Graph
+        </button>
+        <button class="modal-close-btn" onclick="closeModal('attackPathModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+
+    <div class="modal-body" style="max-height: 78vh; overflow-y: auto; padding: 20px;">
+      <!-- Loading State -->
+      <div id="attackPathLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #ff9100;"></i>
+        <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Running Monte Carlo attack path permutations across enterprise topology...</span>
+      </div>
+
+      <!-- Results Container -->
+      <div id="attackPathResults" style="display: none;">
+        
+        <!-- Metrics Row -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+          <div class="sim-metric-card">
+            <span class="sim-metric-label">COMPROMISE PROBABILITY</span>
+            <span class="sim-metric-val" id="simProbMetric" style="color: #ff3366;">91.4%</span>
+            <span class="sim-metric-sub">Monte Carlo Convergence</span>
+          </div>
+          <div class="sim-metric-card">
+            <span class="sim-metric-label">MEAN TIME TO BREACH</span>
+            <span class="sim-metric-val" id="simMttbMetric" style="color: #ff9100;">18 min</span>
+            <span class="sim-metric-sub">Speed of Lateral Spread</span>
+          </div>
+          <div class="sim-metric-card">
+            <span class="sim-metric-label">CRITICAL PATHS</span>
+            <span class="sim-metric-val" id="simPathsMetric" style="color: #00e5ff;">3</span>
+            <span class="sim-metric-sub">Active Pivot Trajectories</span>
+          </div>
+          <div class="sim-metric-card">
+            <span class="sim-metric-label">CROWN JEWELS AT RISK</span>
+            <span class="sim-metric-val" id="simJewelsMetric" style="color: #a855f7;">3</span>
+            <span class="sim-metric-sub">Within Reach (1-3 Hops)</span>
+          </div>
+        </div>
+
+        <!-- Crown Jewels at Risk Section -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-gem" style="color: #ff3366;"></i> Crown Jewel Assets Within Adversary Reach
+          </h4>
+          <div id="simJewelsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Attack Paths Sequence -->
+        <div style="margin-bottom: 20px;">
+          <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-route" style="color: #ff9100;"></i> Predicted Lateral Movement Pivot Sequences
+          </h4>
+          <div id="simPathsContainer" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Chokepoint Defenses -->
+        <div>
+          <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-shield-halved" style="color: #00e676;"></i> Recommended Chokepoint Defenses (Pre-emptive Containment)
+          </h4>
+          <div id="simChokepointsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

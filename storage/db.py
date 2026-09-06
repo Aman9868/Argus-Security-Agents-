@@ -146,6 +146,43 @@ def init_db():
             )
         """)
 
+        # 7. Autonomous Attack Path & Blast Radius Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS attack_path_simulations (
+                simulation_id TEXT PRIMARY KEY,
+                root_ioc TEXT NOT NULL,
+                compromised_node TEXT NOT NULL,
+                crown_jewels_at_risk INTEGER DEFAULT 0,
+                mean_time_to_breach_min INTEGER DEFAULT 0,
+                chokepoints_json TEXT NOT NULL,
+                paths_json TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 8. Autonomous Payload & Binary Dissections Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS payload_dissections (
+                analysis_id TEXT PRIMARY KEY,
+                sample_name TEXT NOT NULL,
+                file_hash TEXT NOT NULL,
+                file_type TEXT DEFAULT 'PE_EXE',
+                entropy_score REAL DEFAULT 0.0,
+                is_packed INTEGER DEFAULT 0,
+                suspicious_apis_json TEXT NOT NULL,
+                extracted_iocs_json TEXT NOT NULL,
+                yara_rule TEXT NOT NULL,
+                execution_flow_json TEXT NOT NULL,
+                verdict TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        try:
+            cursor.execute("ALTER TABLE payload_dissections ADD COLUMN verdict TEXT")
+        except sqlite3.OperationalError:
+            pass
+
         conn.commit()
 
         # Seed initial intelligence if table is empty
@@ -712,6 +749,199 @@ def get_arena_simulation_by_id(match_id: str) -> Optional[Dict[str, Any]]:
     except Exception as e:
         logger.error("Failed to fetch arena simulation by ID", match_id=match_id, error=str(e))
         return None
+
+
+# ==============================================================================
+# ATTACK PATH & BLAST RADIUS STORAGE METHODS
+# ==============================================================================
+# ATTACK PATH & BLAST RADIUS STORAGE METHODS
+# ==============================================================================
+
+def save_attack_path_simulation(data: Dict[str, Any]) -> bool:
+    """Saves an attack path and blast radius simulation to SQLite."""
+    try:
+        sim_id = data.get("simulation_id") or f"SIM-{secrets.token_hex(4)}"
+        root_ioc = data.get("root_ioc") or data.get("compromised_origin") or "185.220.101.45"
+        compromised_node = data.get("compromised_node") or data.get("compromised_origin") or "WS-CORP-402"
+        jewels = data.get("crown_jewels_at_risk")
+        crown_jewels_count = len(jewels) if isinstance(jewels, list) else (jewels or 0)
+        mttb = data.get("mean_time_to_breach_min") or data.get("mttb_minutes") or 18
+        chokepoints = data.get("chokepoints") or data.get("chokepoint_defenses") or []
+        paths = data.get("paths") or data.get("critical_attack_paths") or []
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO attack_path_simulations (
+                    simulation_id, root_ioc, compromised_node, crown_jewels_at_risk,
+                    mean_time_to_breach_min, chokepoints_json, paths_json, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                sim_id,
+                root_ioc,
+                compromised_node,
+                crown_jewels_count,
+                mttb,
+                json.dumps(chokepoints),
+                json.dumps(paths)
+            ))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to save attack path simulation", error=str(e))
+        return False
+
+
+def get_attack_path_simulation(simulation_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves an attack path simulation record by ID."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM attack_path_simulations WHERE simulation_id = ?", (simulation_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            chokepoints = json.loads(row["chokepoints_json"] or "[]")
+            paths = json.loads(row["paths_json"] or "[]")
+            return {
+                "simulation_id": row["simulation_id"],
+                "root_ioc": row["root_ioc"],
+                "compromised_origin": row["root_ioc"],
+                "compromised_node": row["compromised_node"],
+                "crown_jewels_at_risk": row["crown_jewels_at_risk"],
+                "mean_time_to_breach_min": row["mean_time_to_breach_min"],
+                "mttb_minutes": row["mean_time_to_breach_min"],
+                "chokepoints": chokepoints,
+                "chokepoint_defenses": chokepoints,
+                "paths": paths,
+                "critical_attack_paths": paths,
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch attack path simulation", error=str(e))
+        return None
+
+
+# ==============================================================================
+# PAYLOAD & BINARY DISSECTION STORAGE METHODS
+# ==============================================================================
+
+def save_payload_dissection(data: Dict[str, Any]) -> bool:
+    """Saves static reverse engineering dissection report to SQLite."""
+    try:
+        analysis_id = data.get("analysis_id") or data.get("sha256") or data.get("sample_id") or secrets.token_hex(8)
+        sample_name = data.get("sample_name") or data.get("file_name") or data.get("sample_id") or "sample.bin"
+        file_hash = data.get("file_hash") or data.get("sha256") or data.get("md5") or analysis_id
+        file_type = data.get("file_type") or "PE_EXE"
+        entropy = data.get("entropy_score") if "entropy_score" in data else data.get("overall_entropy", 0.0)
+        is_packed = 1 if (data.get("is_packed") or entropy > 7.0) else 0
+        apis = data.get("suspicious_apis") or data.get("suspicious_imports") or []
+        iocs = data.get("extracted_iocs") or data.get("obfuscated_strings") or []
+        yara = data.get("yara_rule") or data.get("yara_l_rule") or ""
+        flow = data.get("execution_flow") or data.get("sections") or data.get("recommendations") or []
+        verdict = data.get("verdict") or ("CRITICAL" if entropy > 7.0 else "MALICIOUS")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO payload_dissections (
+                    analysis_id, sample_name, file_hash, file_type, entropy_score,
+                    is_packed, suspicious_apis_json, extracted_iocs_json, yara_rule,
+                    execution_flow_json, verdict, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                analysis_id,
+                sample_name,
+                file_hash,
+                file_type,
+                entropy,
+                is_packed,
+                json.dumps(apis),
+                json.dumps(iocs),
+                yara,
+                json.dumps(flow),
+                verdict
+            ))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to save payload dissection", error=str(e))
+        return False
+
+
+def get_payload_dissection(identifier: str) -> Optional[Dict[str, Any]]:
+    """Retrieves dissection report by analysis ID or file hash."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM payload_dissections WHERE analysis_id = ? OR file_hash = ?", (identifier, identifier))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            apis = json.loads(row["suspicious_apis_json"] or "[]")
+            iocs = json.loads(row["extracted_iocs_json"] or "[]")
+            flow = json.loads(row["execution_flow_json"] or "[]")
+            verdict_val = row["verdict"] if ("verdict" in row.keys() and row["verdict"]) else ("CRITICAL" if row["entropy_score"] > 7.0 else "MALICIOUS")
+            return {
+                "analysis_id": row["analysis_id"],
+                "sample_name": row["sample_name"],
+                "file_name": row["sample_name"],
+                "file_hash": row["file_hash"],
+                "sha256": row["file_hash"],
+                "file_type": row["file_type"],
+                "entropy_score": row["entropy_score"],
+                "overall_entropy": row["entropy_score"],
+                "is_packed": bool(row["is_packed"]),
+                "suspicious_apis": apis,
+                "suspicious_imports": apis,
+                "extracted_iocs": iocs,
+                "obfuscated_strings": iocs,
+                "yara_rule": row["yara_rule"],
+                "yara_l_rule": row["yara_rule"],
+                "execution_flow": flow,
+                "sections": flow,
+                "verdict": verdict_val,
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch payload dissection", error=str(e))
+        return None
+
+
+def get_all_payload_dissections(limit: int = 20) -> List[Dict[str, Any]]:
+    """Lists recent payload dissection reports."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT analysis_id, sample_name, file_hash, file_type, entropy_score,
+                       is_packed, suspicious_apis_json, extracted_iocs_json, yara_rule,
+                       execution_flow_json, verdict, created_at
+                FROM payload_dissections
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                verdict_val = r["verdict"] if ("verdict" in r.keys() and r["verdict"]) else ("CRITICAL" if r["entropy_score"] > 7.0 else "MALICIOUS")
+                results.append({
+                    "analysis_id": r["analysis_id"],
+                    "sample_name": r["sample_name"],
+                    "file_name": r["sample_name"],
+                    "file_hash": r["file_hash"],
+                    "sha256": r["file_hash"],
+                    "file_type": r["file_type"],
+                    "entropy_score": r["entropy_score"],
+                    "overall_entropy": r["entropy_score"],
+                    "is_packed": bool(r["is_packed"]),
+                    "verdict": verdict_val,
+                    "created_at": r["created_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to fetch all payload dissections", error=str(e))
+        return []
 
 
 # Initialize DB automatically when imported

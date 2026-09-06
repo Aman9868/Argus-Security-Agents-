@@ -8,7 +8,7 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![Cytoscape.js](https://img.shields.io/badge/Graph_Viz-Cytoscape.js-brightgreen.svg)](https://js.cytoscape.org/)
 [![Guardrails AI](https://img.shields.io/badge/Security-Guardrails_AI-red.svg)](https://github.com/guardrails-ai/guardrails)
-[![Tests Passing](https://img.shields.io/badge/Tests-37%20Passed-success.svg)](#-test-verification)
+[![Tests Passing](https://img.shields.io/badge/Tests-49%20Passed-success.svg)](#-test-verification)
 
 ---
 
@@ -18,11 +18,13 @@
 
 ### Key Capabilities at a Glance:
 1. **Autonomous Adversarial Arena (Red vs. Blue Self-Play)**: Pits Red Agent adversary emulation (APT29, FIN7, Lazarus Group) against Blue Agent defenders in multi-round duels, calculating real-time Time-to-Detect (TTD ms) and synthesizing verified Sigma detection rules.
-2. **Generative Chameleon Honeytokens & Deception Sinks**: Dynamically deploys contextual decoy credentials (fake AWS keys, canary database strings, decoy JWTs) to bait and trap lateral movement attempts.
-3. **GraphRAG Multi-Hop Deep Threat Hunting**: Recursive 3-hop graph traversal uncovering hidden C2 infrastructure, bulletproof hosting networks, and shared registrant footprints.
-4. **Dual Threat Infrastructure Visualization**: High-resolution interactive Cytoscape.js threat graph coupled with a Leaflet & D3 cyber world map displaying real-time geographic attack origin telemetry.
-5. **Human-in-the-Loop (HITL) Containment Gateway**: Strict RBAC-enforced safety policies preventing unverified quarantine actions while allowing sub-second containment when approved.
-6. **Enterprise Guardrails AI & PII Masking**: Real-time interception of prompt injections, jailbreaks, and sensitive internal IP topology leaks.
+2. **Autonomous Attack Path & Blast Radius Predictor**: Monte Carlo simulation of lateral movement radiating from an IOC or compromised host, calculating reachability to Crown Jewel databases, Domain Controllers, and Cloud buckets within 1-3 pivot hops; computes Mean Time to Breach (MTTB in min); identifies proactive "Chokepoint Defenses"; and overlays glowing dashed amber paths directly onto Cytoscape.js.
+3. **Autonomous Binary & Payload Dissection Agent (Static Reverse Engineering)**: Safe static reverse engineering of malicious payloads (`invoice.docx`, `stager.exe`, `rat_client.bin`), extracting section Shannon entropy scores, identifying suspicious Win32 APIs (`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`), de-obfuscating strings (Base64/XOR/ROT13), and synthesizing dynamic YARA-L memory rules.
+4. **Generative Chameleon Honeytokens & Deception Sinks**: Dynamically deploys contextual decoy credentials (fake AWS keys, canary database strings, decoy JWTs) to bait and trap lateral movement attempts.
+5. **GraphRAG Multi-Hop Deep Threat Hunting**: Recursive 3-hop graph traversal uncovering hidden C2 infrastructure, bulletproof hosting networks, and shared registrant footprints.
+6. **Dual Threat Infrastructure Visualization**: High-resolution interactive Cytoscape.js threat graph coupled with a Leaflet & D3 cyber world map displaying real-time geographic attack origin telemetry.
+7. **Human-in-the-Loop (HITL) Containment Gateway**: Strict RBAC-enforced safety policies preventing unverified quarantine actions while allowing sub-second containment when approved.
+8. **Enterprise Guardrails AI & PII Masking**: Real-time interception of prompt injections, jailbreaks, and sensitive internal IP topology leaks.
 
 ---
 
@@ -106,6 +108,24 @@ Argus actively deploys dynamic honeytoken decoys into simulated production asset
 - **Canary JWT Auth Tokens**: Signed with trapped sub claims alerting when parsed.
 - **Canary Web Endpoints**: Hidden admin/metrics endpoints triggering automated IP containment upon probe.
 
+## ⚡ Autonomous Attack Path & Blast Radius Predictor
+
+When an IOC or compromised host is identified, Argus simulates lateral movement trajectories across enterprise network topology and Active Directory / Cloud IAM domains using Monte Carlo simulation (500 iterations):
+- **Crown Jewel Reachability**: Maps which PostgreSQL PCI vaults, Active Directory Domain Controllers (`DC-CORP-01`), and AWS S3 financial buckets (`s3://corp-finance-vault-prod`) are within 1-3 pivot hops.
+- **Mean Time to Breach (MTTB)**: Computes realistic velocity metrics (e.g. 18-minute compromise window).
+- **Proactive Chokepoint Defenses**: Recommends high-impact tactical isolations (e.g., `CP-01: Zero-Trust ACL on Port 5432`, `CP-02: Sever Kerberos Constrained Delegation`, `CP-03: Invalidate AWS STS credentials`) that sever up to 45% of potential lateral pathways.
+- **Cytoscape Canvas Overlay**: Injects predicted trajectories onto the interactive canvas in glowing dashed amber lines (`isAttackPath: true`) with sub-second path layout calculation.
+
+---
+
+## 🔬 Autonomous Binary & Payload Dissection Agent
+
+Argus features an agentic static reverse engineering pipeline designed for zero-trust environments:
+- **Shannon Entropy Profiling**: Computes byte distribution entropy across PE and macro sections (`.text`, `.rdata`, `.rsrc`, `word/vbaProject.bin`). Sections exceeding 7.0 entropy are flagged as heavily packed, encrypted, or containing weaponized shellcode.
+- **Suspicious Win32 API Cataloging**: Scans Import Address Tables (IAT) and flags offensive API patterns (`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`, `MiniDumpWriteDump`, `AdjustTokenPrivileges`) correlated to MITRE ATT&CK tactics (T1055, T1003, T1056).
+- **Automated String De-obfuscation**: Detects and decodes hidden payload strings encoded in Base64 (including UTF-16LE PowerShell commands), XOR byte ciphers, and Caesar/ROT13 obfuscation.
+- **Dynamic YARA-L Rule Synthesis**: Automatically generates production-ready YARA-L memory rules containing extracted byte signatures and API combinations for instant deployment to SIEM and EDR fleets.
+
 ---
 
 ## 📁 Repository Structure
@@ -126,20 +146,24 @@ cyber-agent/
 │       ├── main.py          # FastAPI application entrypoint
 │       ├── routes/          # Modular API route controllers
 │       │   ├── arena.py     # Adversarial Arena endpoints
+│       │   ├── blast_radius.py # Attack Path & Blast Radius endpoints
 │       │   ├── chat.py      # Guardrail-protected chat
 │       │   ├── deception.py # Chameleon honeytoken deployment
 │       │   ├── hitl.py      # Human-in-the-loop review
-│       │   └── investigation.py
+│       │   ├── investigation.py # Threat investigation endpoints
+│       │   └── malware.py   # Binary & payload dissection endpoints
 │       └── static/          # Segregated high-performance web dashboard
 │           ├── assets/      # SVG maps and branding icons
-│           ├── components/  # Modular HTML dialogs (arena, deception, copilot)
+│           ├── components/  # Modular HTML dialogs (arena, blast_radius, malware, copilot)
 │           ├── css/         # Modular styles (styles.css)
 │           ├── js/          # Segregated client orchestrators
 │           │   ├── app.js
 │           │   ├── arena.js
+│           │   ├── blast_radius.js
 │           │   ├── copilot.js
 │           │   ├── deception.js
-│           │   └── graph.js
+│           │   ├── graph.js
+│           │   └── malware.js
 │           └── index.html   # Lean main dashboard shell
 ├── core/
 │   ├── gateway/             # Central Tool Gateway with RBAC & cache
@@ -148,7 +172,11 @@ cyber-agent/
 ├── security/
 │   └── guardrails_engine.py # Prompt injection & secret leakage shields
 ├── storage/
-│   └── db.py                # SQLite persistence (investigations, arena, traps)
+│   └── db.py                # SQLite persistence (investigations, arena, attack paths, malware)
+├── tools/
+│   ├── blast_radius.py      # Monte Carlo lateral attack path & chokepoint engine
+│   ├── deception.py         # Chameleon honeytoken generator
+│   └── malware_dissector.py # Shannon entropy, PE parsing, de-obfuscation & YARA
 └── tests/
     ├── integration/         # API & supervisor cross-routing tests
     └── unit/                # Engine, permissions, and tool unit tests

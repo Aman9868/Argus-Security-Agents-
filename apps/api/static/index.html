@@ -94,6 +94,11 @@
           <span>Adversarial Arena</span>
         </button>
 
+        <button class="malware-nav-btn" onclick="openMalwareModal()" title="Static Binary & Payload Dissection Agent (Reverse Engineering)" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(0, 229, 255, 0.18)); border: 1px solid rgba(168, 85, 247, 0.45); color: #ffffff; padding: 6px 13px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all 0.2s ease;">
+          <i class="fa-solid fa-microchip" style="color: #c084fc;"></i>
+          <span>Payload Dissector</span>
+        </button>
+
         <button class="copilot-nav-btn" onclick="toggleCopilotWidget()" title="Toggle Cyber Copilot (or click floating launcher)">
           <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--neon-cyan);"></i>
           <span>AI Copilot</span>
@@ -237,6 +242,7 @@
             <!-- Side Zoom & Fit Tools -->
             <div class="sub-toolbar-tools">
               <button class="ctrl-tool-btn" id="btnGraphRAGHunt" onclick="triggerGraphRAGHunt()" title="Autonomous Multi-Hop GraphRAG Threat Hunt" style="color: var(--neon-cyan); border-color: rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.08); width: auto; padding: 0 10px; gap: 6px; font-weight: 700; font-size: 0.74rem; display: inline-flex; align-items: center;"><i class="fa-solid fa-route"></i> <span>GraphRAG Hunt</span></button>
+              <button class="ctrl-tool-btn" id="btnAttackPath" onclick="triggerAttackPathSim()" title="Autonomous Attack Path & Blast Radius Simulation" style="color: #ff9100; border-color: rgba(255, 145, 0, 0.5); background: rgba(255, 145, 0, 0.09); width: auto; padding: 0 10px; gap: 6px; font-weight: 700; font-size: 0.74rem; display: inline-flex; align-items: center;"><i class="fa-solid fa-fire-flame-curved"></i> <span>Blast Radius</span></button>
               <button class="ctrl-tool-btn" onclick="centerGraph()" title="Center Graph"><i class="fa-solid fa-crosshairs"></i></button>
               <button class="ctrl-tool-btn" onclick="zoomGraph(1.2)" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
               <button class="ctrl-tool-btn" onclick="zoomGraph(0.8)" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
@@ -1065,6 +1071,241 @@
     </div>
   </div>
 
+  <!-- 6. Autonomous Attack Path & Blast Radius Modal -->
+  <!-- Autonomous Attack Path & Blast Radius Simulation Modal -->
+  <div class="modal-overlay" id="attackPathModal" onclick="closeModalOnBackdrop(event, 'attackPathModal')">
+    <div class="modal-dialog modal-lg" style="max-width: 950px; width: 92vw;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(255, 145, 0, 0.3);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(255, 145, 0, 0.15); color: #ff9100; border: 1px solid rgba(255, 145, 0, 0.4);">
+            <i class="fa-solid fa-fire-flame-curved"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Autonomous Attack Path &amp; Blast Radius Predictor</span>
+              <span class="shortcut-badge" id="simTargetBadge" style="color: #ff9100; border-color: rgba(255, 145, 0, 0.4);">185.220.101.45</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">MONTE CARLO LATERAL MOVEMENT SIMULATION (500 ITERATIONS) &bull; CROWN JEWEL REACHABILITY</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="header-pill-btn" onclick="overlayAttackPathOnGraph()" style="background: rgba(255, 145, 0, 0.15); color: #ff9100; border-color: rgba(255, 145, 0, 0.4);">
+            <i class="fa-solid fa-diagram-project"></i> Overlay on Threat Graph
+          </button>
+          <button class="modal-close-btn" onclick="closeModal('attackPathModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height: 78vh; overflow-y: auto; padding: 20px;">
+        <!-- Loading State -->
+        <div id="attackPathLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: #ff9100;"></i>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Running Monte Carlo attack path permutations across enterprise topology...</span>
+        </div>
+
+        <!-- Results Container -->
+        <div id="attackPathResults" style="display: none;">
+          <!-- Metrics Row -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;">
+            <div class="sim-metric-card">
+              <span class="sim-metric-label">COMPROMISE PROBABILITY</span>
+              <span class="sim-metric-val" id="simProbMetric" style="color: #ff3366;">91.4%</span>
+              <span class="sim-metric-sub">Monte Carlo Convergence</span>
+            </div>
+            <div class="sim-metric-card">
+              <span class="sim-metric-label">MEAN TIME TO BREACH</span>
+              <span class="sim-metric-val" id="simMttbMetric" style="color: #ff9100;">18 min</span>
+              <span class="sim-metric-sub">Speed of Lateral Spread</span>
+            </div>
+            <div class="sim-metric-card">
+              <span class="sim-metric-label">CRITICAL PATHS</span>
+              <span class="sim-metric-val" id="simPathsMetric" style="color: #00e5ff;">3</span>
+              <span class="sim-metric-sub">Active Pivot Trajectories</span>
+            </div>
+            <div class="sim-metric-card">
+              <span class="sim-metric-label">CROWN JEWELS AT RISK</span>
+              <span class="sim-metric-val" id="simJewelsMetric" style="color: #a855f7;">3</span>
+              <span class="sim-metric-sub">Within Reach (1-3 Hops)</span>
+            </div>
+          </div>
+
+          <!-- Crown Jewels Section -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-gem" style="color: #ff3366;"></i> Crown Jewel Assets Within Adversary Reach
+            </h4>
+            <div id="simJewelsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px;"></div>
+          </div>
+
+          <!-- Attack Paths Sequence -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-route" style="color: #ff9100;"></i> Predicted Lateral Movement Pivot Sequences
+            </h4>
+            <div id="simPathsContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+          </div>
+
+          <!-- Chokepoint Defenses -->
+          <div>
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-shield-halved" style="color: #00e676;"></i> Recommended Chokepoint Defenses (Pre-emptive Containment)
+            </h4>
+            <div id="simChokepointsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Autonomous Binary & Payload Dissection Modal -->
+  <div class="modal-overlay" id="malwareModal" onclick="closeModalOnBackdrop(event, 'malwareModal')">
+    <div class="modal-dialog modal-lg" style="max-width: 1000px; width: 94vw;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(168, 85, 247, 0.3);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">
+            <i class="fa-solid fa-microchip"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Autonomous Binary &amp; Payload Dissection Agent</span>
+              <span id="malwareVerdictBadge" class="shortcut-badge tag-threat">ANALYZING</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">STATIC REVERSE ENGINEERING &bull; SHANNON ENTROPY &bull; API HEURISTICS &bull; YARA-L SYNTHESIS</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <select id="malwareSampleSelect" onchange="runMalwareDissection(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 220px;">
+          </select>
+          <button class="modal-close-btn" onclick="closeModal('malwareModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto; padding: 20px;">
+        <div id="malwareLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+          <i class="fa-solid fa-gear fa-spin" style="font-size: 2rem; color: #a855f7;"></i>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Dissecting binary headers, computing section entropy, and decoding strings...</span>
+        </div>
+
+        <div id="malwareResults" style="display: none;">
+          <!-- Metadata & Entropy Overview -->
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 20px;">
+            <div class="malware-meta-card">
+              <div class="meta-row">
+                <span class="meta-label">File Artifact:</span>
+                <span class="meta-val" id="malwareFileName">stager.exe</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Format:</span>
+                <span class="meta-val" id="malwareFileType" style="color: var(--neon-cyan);">PE32+ executable</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">Size:</span>
+                <span class="meta-val" id="malwareFileSize">122.0 KB</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">SHA-256:</span>
+                <span class="meta-val"><code id="malwareSha256" style="font-size: 0.7rem; color: #cbd5e1;">8f43...010f</code></span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-label">MD5:</span>
+                <span class="meta-val"><code id="malwareMd5" style="font-size: 0.72rem; color: #94a3b8;">7f83...d65d</code></span>
+              </div>
+            </div>
+
+            <div class="malware-entropy-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase;">Shannon Entropy Score</span>
+                <span id="malwareEntropyValue" style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 800; color: #ff9100;">7.91 / 8.00</span>
+              </div>
+              <div class="entropy-meter-container">
+                <div id="malwareEntropyBar" class="entropy-meter-bar" style="width: 98%;"></div>
+              </div>
+              <div id="malwareEntropyStatus" style="font-size: 0.72rem; margin-top: 8px; font-family: var(--font-mono);"></div>
+              <div style="font-size: 0.68rem; color: var(--text-muted); margin-top: 6px;">
+                Entropy &gt; 7.0 indicates heavy packing, encryption, or compressed shellcode.
+              </div>
+            </div>
+          </div>
+
+          <!-- Binary Sections -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-layer-group" style="color: #a855f7;"></i> Binary Sections &amp; Granular Entropy
+            </h4>
+            <table class="copilot-table-responsive" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>Section</th>
+                  <th>Virtual Size</th>
+                  <th>Entropy</th>
+                  <th>Characteristics &amp; Heuristics</th>
+                </tr>
+              </thead>
+              <tbody id="malwareSectionsBody"></tbody>
+            </table>
+          </div>
+
+          <!-- Suspicious Win32 APIs -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-bolt" style="color: #ff3366;"></i> Suspicious API Imports &amp; Capabilities
+            </h4>
+            <table class="copilot-table-responsive" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>API Function</th>
+                  <th>Module (DLL)</th>
+                  <th>Offensive Category</th>
+                  <th>Severity</th>
+                  <th>MITRE ATT&amp;CK Tactic</th>
+                </tr>
+              </thead>
+              <tbody id="malwareApisBody"></tbody>
+            </table>
+          </div>
+
+          <!-- De-obfuscated Strings -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-code-compare" style="color: #00e5ff;"></i> De-obfuscated Strings &amp; C2 Profiles
+            </h4>
+            <table class="copilot-table-responsive" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>Obfuscated Raw String</th>
+                  <th>Encoding / Cipher</th>
+                  <th>Decoded Cleartext Value</th>
+                </tr>
+              </thead>
+              <tbody id="malwareStringsBody"></tbody>
+            </table>
+          </div>
+
+          <!-- YARA-L Rule Block -->
+          <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-file-code" style="color: #00e676;"></i> Autonomous YARA-L Detection Rule
+              </h4>
+              <button class="header-pill-btn" onclick="copyYaraRule()" style="color: #00e676; border-color: rgba(0, 230, 118, 0.4);">
+                <i class="fa-regular fa-copy"></i> Copy YARA-L Rule
+              </button>
+            </div>
+            <pre style="background: #060a14; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; color: #a7f3d0; font-family: var(--font-mono); font-size: 0.74rem; overflow-x: auto; line-height: 1.5;"><code id="malwareYaraCode">// Rule will appear here</code></pre>
+          </div>
+
+          <!-- Autonomous Recommendations -->
+          <div>
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-shield-halved" style="color: var(--neon-cyan);"></i> Autonomous EDR / XDR Containment Actions
+            </h4>
+            <div id="malwareRecsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================================================
        APPLICATION LOGIC & CYTOSCAPE RENDERING
        ======================================================================== -->
@@ -1074,5 +1315,7 @@
   <script src="/static/js/deception.js"></script>
   <script src="/static/js/app.js"></script>
   <script src="/static/js/arena.js"></script>
+  <script src="/static/js/blast_radius.js"></script>
+  <script src="/static/js/malware.js"></script>
 </body>
 </html>
