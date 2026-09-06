@@ -248,6 +248,55 @@ class LLMGateway:
                     "```"
                 )
 
+            if "abuseipdb" in user_text or "ip reputation" in user_text:
+                return (
+                    "### 🌐 AbuseIPDB Threat Intelligence Dossier: `185.220.101.45`\n\n"
+                    "- **Abuse Confidence Score:** **100% (CRITICAL RISK)**\n"
+                    "- **Total Public Reports:** 842 distinct incidents submitted by 97 independent SOC organizations\n"
+                    "- **ISP & Hosting:** *Stiftung Erneuerbare Freiheit* (Active Tor Exit Relay / C2 Proxy Node)\n"
+                    "- **Country & Geo:** Germany (Frankfurt am Main) / ASN: AS60729\n"
+                    "- **Threat Categories:** Brute-Force SSH/RDP, Port Scanning, Cobalt Strike Command & Control\n"
+                    "- **Recommended Action:** Immediate ingress/egress perimeter drop across stateful firewalls."
+                )
+
+            if "sigma" in user_text or "detection rule" in user_text or "siem" in user_text:
+                return (
+                    "### 📜 Enterprise Sigma Rule & Multi-SIEM Detection Queries\n\n"
+                    "```yaml\n"
+                    "title: Detection of Cobalt Strike C2 Network Beaconing (185.220.101.45)\n"
+                    "id: a7f8c3e2-9b1d-48a5-83e9-c2919854721a\n"
+                    "status: stable\n"
+                    "description: Detects outbound communication to confirmed adversary C2 IP 185.220.101.45\n"
+                    "logsource:\n"
+                    "  category: firewall\n"
+                    "  product: network\n"
+                    "detection:\n"
+                    "  selection:\n"
+                    "    DestinationIp: 185.220.101.45\n"
+                    "  condition: selection\n"
+                    "level: critical\n"
+                    "tags:\n"
+                    "  - attack.t1071_001\n"
+                    "  - attack.command_and_control\n"
+                    "```\n\n"
+                    "#### 🔎 Multi-SIEM Compiled Queries:\n"
+                    "- **Splunk SPL:** `index=* DestinationIp=\"185.220.101.45\" | stats count, values(user) by host, DestinationIp`\n"
+                    "- **Elastic KQL:** `destination.ip: \"185.220.101.45\" and not network.direction: \"internal\"`\n"
+                    "- **Sentinel KQL:** `DeviceNetworkEvents | where RemoteIP == \"185.220.101.45\" | project TimeGenerated, DeviceName, RemoteIP, InitiatingProcessFileName`\n"
+                    "- **Linux Containment:** `nft add rule inet filter output ip daddr 185.220.101.45 drop`"
+                )
+
+            if "macro" in user_text or "forensic" in user_text or "ole" in user_text:
+                return (
+                    "### 🔬 Document Macro Forensics Analysis: `invoice.docx`\n\n"
+                    "- **Lure File Type:** Microsoft Word OpenXML (`word/vbaProject.bin` detected)\n"
+                    "- **Risk Score:** **88 / 100 (CRITICAL)**\n"
+                    "- **Auto-Exec Hooks:** `AutoOpen`, `Document_Open` (executes without user prompting)\n"
+                    "- **Weaponized APIs:** `CreateObject(\"WScript.Shell\")`, `powershell.exe -enc`, `URLDownloadToFileA`\n"
+                    "- **Deobfuscated Payload:** In-memory PowerShell stager retrieving payload from `185.220.101.45`\n"
+                    "- **Defensive Action:** Deploy ASR Rule *'Block Office applications from creating child processes'*."
+                )
+
             if "invoice" in user_text or "docx" in user_text or ("containment" in user_text and "entity" in user_text):
                 return (
                     "### 🛡️ Threat Entity Containment Dossier: `invoice.docx`\n\n"
@@ -261,6 +310,7 @@ class LLMGateway:
                     "3. **Perimeter C2 Severance:** Enforce firewall block for IP `185.220.101.45:443`.\n"
                     "4. **EDR Hash Blacklist:** Push hash ban rule enterprise-wide to terminate any running spawned processes."
                 )
+
 
             # Default contextual analyst response
             return (

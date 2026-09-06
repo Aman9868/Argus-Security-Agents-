@@ -19,6 +19,8 @@ from apps.api.routes.arena import router as arena_router
 from apps.api.routes.blast_radius import router as blast_radius_router
 from apps.api.routes.malware import router as malware_router
 from apps.api.routes.phishing import router as phishing_router
+from apps.api.routes.threat_intel import router as threat_intel_router
+from apps.api.routes.detection import router as detection_router
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -77,6 +79,9 @@ app.include_router(arena_router, prefix="/api")
 app.include_router(blast_radius_router, prefix="/api")
 app.include_router(malware_router, prefix="/api")
 app.include_router(phishing_router, prefix="/api")
+app.include_router(threat_intel_router, prefix="/api")
+app.include_router(detection_router, prefix="/api")
+
 
 # 4. Mount Static Web Dashboard
 static_dir = os.path.join(os.path.dirname(__file__), "static")
