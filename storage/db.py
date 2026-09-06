@@ -183,6 +183,28 @@ def init_db():
         except sqlite3.OperationalError:
             pass
 
+        # 9. Quishing & Advanced Phishing Investigations Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS phishing_investigations (
+                analysis_id TEXT PRIMARY KEY,
+                sample_id TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                sender TEXT NOT NULL,
+                recipient TEXT NOT NULL,
+                sender_ip TEXT,
+                has_qr_code INTEGER DEFAULT 0,
+                qr_decoded_url TEXT,
+                final_destination_url TEXT,
+                risk_score INTEGER DEFAULT 0,
+                verdict TEXT NOT NULL,
+                headers_json TEXT NOT NULL,
+                landing_page_json TEXT NOT NULL,
+                remediation_json TEXT NOT NULL,
+                affected_mailboxes_estimate INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         conn.commit()
 
         # Seed initial intelligence if table is empty
@@ -941,6 +963,111 @@ def get_all_payload_dissections(limit: int = 20) -> List[Dict[str, Any]]:
             return results
     except Exception as e:
         logger.error("Failed to fetch all payload dissections", error=str(e))
+        return []
+
+
+# ==============================================================================
+# QUISHING & PHISHING INVESTIGATION STORAGE METHODS
+# ==============================================================================
+
+def save_phishing_investigation(data: Dict[str, Any]) -> bool:
+    """Persists a Quishing or email phishing forensic analysis record to SQLite."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO phishing_investigations (
+                    analysis_id, sample_id, subject, sender, recipient, sender_ip,
+                    has_qr_code, qr_decoded_url, final_destination_url, risk_score,
+                    verdict, headers_json, landing_page_json, remediation_json,
+                    affected_mailboxes_estimate, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                data["analysis_id"],
+                data.get("sample_id", "custom_email"),
+                data.get("subject", "Unknown Subject"),
+                data.get("sender", "Unknown Sender"),
+                data.get("recipient", "Unknown Recipient"),
+                data.get("sender_ip", ""),
+                1 if data.get("has_qr_code") else 0,
+                data.get("qr_data", {}).get("raw_encoded_payload") if data.get("qr_data") else None,
+                data.get("final_destination_url", ""),
+                data.get("risk_score", 0),
+                data.get("verdict", "SUSPICIOUS"),
+                json.dumps(data.get("headers", {})),
+                json.dumps(data.get("landing_page_analysis", {})),
+                json.dumps(data.get("remediation_playbook", [])),
+                data.get("affected_mailboxes_estimate", 0)
+            ))
+            conn.commit()
+            return True
+    except Exception as e:
+        logger.error("Failed to save phishing investigation", error=str(e))
+        return False
+
+
+def get_phishing_investigation(analysis_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves specific phishing investigation report by analysis ID."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM phishing_investigations WHERE analysis_id = ?", (analysis_id,))
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "analysis_id": row["analysis_id"],
+                "sample_id": row["sample_id"],
+                "subject": row["subject"],
+                "sender": row["sender"],
+                "recipient": row["recipient"],
+                "sender_ip": row["sender_ip"],
+                "has_qr_code": bool(row["has_qr_code"]),
+                "qr_decoded_url": row["qr_decoded_url"],
+                "final_destination_url": row["final_destination_url"],
+                "risk_score": row["risk_score"],
+                "verdict": row["verdict"],
+                "headers": json.loads(row["headers_json"] or "{}"),
+                "landing_page_analysis": json.loads(row["landing_page_json"] or "{}"),
+                "remediation_playbook": json.loads(row["remediation_json"] or "[]"),
+                "affected_mailboxes_estimate": row["affected_mailboxes_estimate"],
+                "created_at": row["created_at"]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch phishing investigation", analysis_id=analysis_id, error=str(e))
+        return None
+
+
+def get_all_phishing_investigations(limit: int = 20) -> List[Dict[str, Any]]:
+    """Lists recent phishing and quishing triage investigations."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT analysis_id, sample_id, subject, sender, recipient, has_qr_code,
+                       risk_score, verdict, affected_mailboxes_estimate, created_at
+                FROM phishing_investigations
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            results = []
+            for r in rows:
+                results.append({
+                    "analysis_id": r["analysis_id"],
+                    "sample_id": r["sample_id"],
+                    "subject": r["subject"],
+                    "sender": r["sender"],
+                    "recipient": r["recipient"],
+                    "has_qr_code": bool(r["has_qr_code"]),
+                    "risk_score": r["risk_score"],
+                    "verdict": r["verdict"],
+                    "affected_mailboxes_estimate": r["affected_mailboxes_estimate"],
+                    "created_at": r["created_at"]
+                })
+            return results
+    except Exception as e:
+        logger.error("Failed to fetch all phishing investigations", error=str(e))
         return []
 
 

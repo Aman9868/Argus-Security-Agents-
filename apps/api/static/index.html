@@ -99,6 +99,11 @@
           <span>Payload Dissector</span>
         </button>
 
+        <button class="quishing-nav-btn" onclick="openQuishingModal()" title="Autonomous Quishing (QR Phishing) & Advanced Email Forensics" style="background: linear-gradient(135deg, rgba(0, 229, 255, 0.2), rgba(59, 130, 246, 0.18)); border: 1px solid rgba(0, 229, 255, 0.45); color: #ffffff; padding: 6px 13px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; display: flex; align-items: center; gap: 7px; cursor: pointer; transition: all 0.2s ease;">
+          <i class="fa-solid fa-qrcode" style="color: var(--neon-cyan);"></i>
+          <span>Quishing &amp; Phishing</span>
+        </button>
+
         <button class="copilot-nav-btn" onclick="toggleCopilotWidget()" title="Toggle Cyber Copilot (or click floating launcher)">
           <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--neon-cyan);"></i>
           <span>AI Copilot</span>
@@ -1306,6 +1311,179 @@
     </div>
   </div>
 
+  <!-- 8. Autonomous Quishing & Advanced Phishing Analysis Modal -->
+  <div class="modal-overlay" id="quishingModal" onclick="closeModalOnBackdrop(event, 'quishingModal')">
+    <div class="modal-dialog modal-lg" style="max-width: 1050px; width: 95vw;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(0, 229, 255, 0.3);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(0, 229, 255, 0.15); color: var(--neon-cyan); border: 1px solid rgba(0, 229, 255, 0.4);">
+            <i class="fa-solid fa-qrcode"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Autonomous Quishing &amp; Advanced Phishing Analysis</span>
+              <span id="quishingVerdictBadge" class="shortcut-badge tag-threat">ANALYZING</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">OPTICAL QR DECODING &bull; REDIRECT CHAIN UNROLLING &bull; SPF/DKIM/DMARC ALIGNMENT &bull; TENANT PURGE</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <select id="quishingSampleSelect" onchange="runQuishingAnalysis(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 230px;">
+          </select>
+          <button class="modal-close-btn" onclick="closeModal('quishingModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height: 82vh; overflow-y: auto; padding: 20px;">
+        <div id="quishingLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--neon-cyan);"></i>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Parsing MIME tree, unrolling redirect hops, and analyzing QR payload matrix...</span>
+        </div>
+
+        <div id="quishingResults" style="display: none;">
+          <!-- Header & Auth Matrix -->
+          <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 20px;">
+            <div class="quish-envelope-card">
+              <div class="envelope-row">
+                <span class="envelope-label">Subject:</span>
+                <span class="envelope-val" id="quishSubject" style="color: #ffffff; font-weight: 700;">URGENT: MFA Migration</span>
+              </div>
+              <div class="envelope-row">
+                <span class="envelope-label">From:</span>
+                <span class="envelope-val" id="quishSender"><code style="color: #fda4af;">admin-notice@mіcrosoft-security-portal.com</code></span>
+              </div>
+              <div class="envelope-row">
+                <span class="envelope-label">Origin IP:</span>
+                <span class="envelope-val"><code id="quishSenderIp" style="color: var(--neon-cyan);">185.220.101.45</code></span>
+              </div>
+              <div class="envelope-row">
+                <span class="envelope-label">Recipient:</span>
+                <span class="envelope-val" id="quishRecipient" style="color: var(--text-dim);">executive-finance@enterprise-corp.com</span>
+              </div>
+              <div class="envelope-row">
+                <span class="envelope-label">Homoglyph:</span>
+                <span class="envelope-val" id="quishHomoglyph"><span class="badge-critical">CYRILLIC 'і' DETECTED</span></span>
+              </div>
+            </div>
+
+            <div class="quish-auth-card">
+              <div style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px;">
+                Email Protocol Authentication Alignment
+              </div>
+              <div class="auth-status-grid">
+                <div class="auth-pill-item" id="authSpfBox">
+                  <span class="auth-tag">SPF</span>
+                  <span class="auth-val" id="authSpfVal">FAIL</span>
+                </div>
+                <div class="auth-pill-item" id="authDkimBox">
+                  <span class="auth-tag">DKIM</span>
+                  <span class="auth-val" id="authDkimVal">FAIL</span>
+                </div>
+                <div class="auth-pill-item" id="authDmarcBox">
+                  <span class="auth-tag">DMARC</span>
+                  <span class="auth-val" id="authDmarcVal">REJECT</span>
+                </div>
+              </div>
+              <div id="authDetailsText" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 10px; line-height: 1.4;"></div>
+            </div>
+          </div>
+
+          <!-- QR Code Matrix Visual Dissection -->
+          <div id="quishQrSection" style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-qrcode" style="color: var(--neon-cyan);"></i> Optical QR Code Matrix Extraction (Quishing)
+            </h4>
+            <div class="qr-inspector-wrapper">
+              <div class="qr-visual-box">
+                <svg viewBox="0 0 100 100" class="qr-svg-mock">
+                  <rect x="5" y="5" width="26" height="26" fill="none" stroke="#00e5ff" stroke-width="4"/>
+                  <rect x="11" y="11" width="14" height="14" fill="#00e5ff"/>
+                  <rect x="69" y="5" width="26" height="26" fill="none" stroke="#00e5ff" stroke-width="4"/>
+                  <rect x="75" y="11" width="14" height="14" fill="#00e5ff"/>
+                  <rect x="5" y="69" width="26" height="26" fill="none" stroke="#00e5ff" stroke-width="4"/>
+                  <rect x="11" y="75" width="14" height="14" fill="#00e5ff"/>
+                  <rect x="37" y="10" width="6" height="6" fill="#00e5ff"/>
+                  <rect x="47" y="20" width="6" height="6" fill="#ff3366"/>
+                  <rect x="57" y="10" width="6" height="6" fill="#00e5ff"/>
+                  <rect x="37" y="47" width="6" height="6" fill="#ff3366"/>
+                  <rect x="47" y="47" width="6" height="6" fill="#00e5ff"/>
+                  <rect x="57" y="47" width="6" height="6" fill="#00e5ff"/>
+                  <rect x="40" y="75" width="8" height="8" fill="#00e5ff"/>
+                  <rect x="55" y="70" width="8" height="8" fill="#ff3366"/>
+                  <rect x="75" y="45" width="6" height="6" fill="#00e5ff"/>
+                  <rect x="85" y="55" width="6" height="6" fill="#ff3366"/>
+                  <line x1="0" y1="50" x2="100" y2="50" stroke="#ff3366" stroke-width="1.5" stroke-dasharray="3 2" class="qr-scan-line"/>
+                </svg>
+                <div class="qr-detect-badge"><i class="fa-solid fa-crosshairs"></i> Bounding Box: 220x220px (99% conf)</div>
+              </div>
+              <div class="qr-details-box">
+                <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; margin-bottom: 6px;">
+                  Decoded Raw QR Payload:
+                </div>
+                <div class="qr-raw-payload" id="quishRawQrPayload"></div>
+                <div style="margin-top: 10px; font-size: 0.72rem; color: var(--text-muted);">
+                  <i class="fa-solid fa-triangle-exclamation" style="color: #ff9100;"></i> 
+                  <strong>Attack Vector:</strong> Threat actor embedded QR code inside image attachment to circumvent email gateway URL rewrite scanners.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Redirect Chain Unrolling -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-route" style="color: #ff9100;"></i> Unrolled Multi-Hop Redirect Chain
+            </h4>
+            <div id="quishRedirectContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+
+          <!-- Credential Harvester & Spoofed Brand Analysis -->
+          <div style="margin-bottom: 20px;">
+            <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-id-card-clip" style="color: #a855f7;"></i> Landing Page &amp; Credential Harvester Classification
+            </h4>
+            <div class="harvester-analysis-grid">
+              <div class="harvester-card">
+                <span class="meta-label">Impersonated Brand:</span>
+                <span class="meta-val" id="quishSpoofedBrand" style="color: #ff3366; font-size: 0.95rem; font-weight: 800;">Microsoft 365 Entra ID</span>
+                <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">Brand Confidence: 98%</span>
+              </div>
+              <div class="harvester-card">
+                <span class="meta-label">Targeted Credentials:</span>
+                <div id="quishHarvestedFields" style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px;"></div>
+              </div>
+              <div class="harvester-card">
+                <span class="meta-label">Final C2 Infrastructure:</span>
+                <div id="quishC2Infra" style="font-family: var(--font-mono); font-size: 0.72rem; color: #cbd5e1; margin-top: 4px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fleet Purge & Containment Execution -->
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-shield-virus" style="color: #00e676;"></i> Enterprise Fleet Mailbox Purge &amp; Tenant Quarantine
+              </h4>
+              <button class="fleet-purge-btn" id="btnExecuteFleetPurge" onclick="executeFleetMailboxPurge()">
+                <i class="fa-solid fa-trash-can"></i> Purge Across Fleet Inboxes
+              </button>
+            </div>
+            <div id="quishPurgeStatus" class="fleet-purge-card">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="purge-icon"><i class="fa-solid fa-envelopes-bulk"></i></div>
+                <div>
+                  <strong style="color: #ffffff; font-size: 0.82rem;">Estimated Fleet Exposure: <span id="quishExposedMailboxes" style="color: #ff3366;">42 Inboxes</span></strong>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">Ready to dispatch Microsoft Graph API hard-delete and Exchange Online Tenant Allow/Block List (TABL) rules.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================================================
        APPLICATION LOGIC & CYTOSCAPE RENDERING
        ======================================================================== -->
@@ -1317,5 +1495,6 @@
   <script src="/static/js/arena.js"></script>
   <script src="/static/js/blast_radius.js"></script>
   <script src="/static/js/malware.js"></script>
+  <script src="/static/js/quishing.js"></script>
 </body>
 </html>
