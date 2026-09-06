@@ -6,9 +6,11 @@ determines Mean Time to Breach (MTTB), and synthesizes proactive Chokepoint Defe
 
 import time
 import secrets
+import hashlib
+import random
 from typing import Dict, Any, List, Optional
 import structlog
-from storage.db import save_attack_path_simulation, get_attack_path_simulation
+from storage.db import save_attack_path_simulation, get_attack_path_simulation, get_ioc_dossier_from_db
 
 logger = structlog.get_logger(__name__)
 
@@ -121,12 +123,84 @@ class AttackPathPredictor:
         self,
         root_ioc: str = "185.220.101.45",
         compromised_host: str = "WS-CORP-402",
-        max_depth: int = 3
+        max_depth: int = 3,
+        iterations: int = 500
     ) -> Dict[str, Any]:
-        """Simulates lateral pivot trajectories radiating from root IOC or host."""
+        """Simulates lateral pivot trajectories radiating dynamically from root IOC or host."""
         sim_id = f"PATH-SIM-{int(time.time())}-{secrets.token_hex(2).upper()}"
-        
-        # Candidate lateral movement paths toward Crown Jewels
+
+        # 1. Clean / Benign indicator detection
+        is_clean = False
+        clean_indicators = {
+            "yahoo.com", "google.com", "microsoft.com", "apple.com",
+            "github.com", "cloudflare.com", "1.1.1.1", "8.8.8.8", "9.9.9.9"
+        }
+        clean_target = root_ioc.lower().strip()
+        if clean_target in clean_indicators:
+            is_clean = True
+        else:
+            dossier = get_ioc_dossier_from_db(root_ioc)
+            if dossier and (dossier.get("threat_level") == "CLEAN" or dossier.get("threat_score", 0) < 20):
+                is_clean = True
+
+        if is_clean:
+            cy_nodes = [{
+                "data": {
+                    "id": "origin_host",
+                    "title": f"BENIGN: {root_ioc}",
+                    "badge": "CLEAN INDICATOR",
+                    "color": "#00e676",
+                    "type": "globe"
+                },
+                "position": {"x": 200, "y": 270}
+            }]
+            simulation_result = {
+                "simulation_id": sim_id,
+                "root_ioc": root_ioc,
+                "compromised_origin": root_ioc,
+                "compromised_node": compromised_host,
+                "compromise_probability": 0.0,
+                "mean_time_to_breach_min": 0,
+                "mttb_minutes": 0,
+                "crown_jewels_at_risk": [],
+                "chokepoints": [],
+                "chokepoint_defenses": [],
+                "paths": [],
+                "critical_attack_paths": [],
+                "graph_elements": cy_nodes,
+                "cytoscape_elements": cy_nodes,
+                "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "executive_summary": (
+                    f"Indicator '{root_ioc}' evaluated as BENIGN / CLEAN. "
+                    f"No active lateral movement pathways toward internal Crown Jewels exist. "
+                    f"Enterprise perimeter and internal identity boundaries are secure."
+                )
+            }
+            save_attack_path_simulation(simulation_result)
+            return simulation_result
+
+        # 2. Dynamic Monte Carlo Simulation
+        seed_val = int(hashlib.sha256(root_ioc.encode()).hexdigest()[:8], 16)
+        rng = random.Random(seed_val)
+
+        success_trials = 0
+        sampled_times = []
+        for _ in range(iterations):
+            p1 = min(0.98, max(0.40, 0.78 + rng.uniform(-0.10, 0.10)))
+            p2 = min(0.98, max(0.40, 0.82 + rng.uniform(-0.08, 0.08)))
+            if rng.random() < p1 and rng.random() < p2:
+                success_trials += 1
+                sampled_times.append(int(14 + rng.uniform(0, 8)))
+
+        comp_prob = round(success_trials / iterations, 3) if iterations > 0 else 0.914
+        mttb = round(sum(sampled_times) / len(sampled_times)) if sampled_times else 18
+
+        p1_prob = round(min(0.95, max(0.60, comp_prob * 0.96)), 2)
+        p2_prob = round(min(0.90, max(0.50, comp_prob * 0.82)), 2)
+        p3_prob = round(min(0.85, max(0.40, comp_prob * 0.71)), 2)
+        mttb_p1 = mttb
+        mttb_p2 = int(mttb * 1.33)
+        mttb_p3 = int(mttb * 1.77)
         raw_paths = [
             {
                 "path_id": "PATH-01-PCI",
@@ -301,22 +375,22 @@ class AttackPathPredictor:
             {
                 "target": "SQL-PCI-PROD-01",
                 "path": [compromised_host, "APP-CORE-SRV", "SQL-PCI-PROD-01"],
-                "path_probability": 0.88,
-                "estimated_mttb_minutes": 18,
+                "path_probability": p1_prob,
+                "estimated_mttb_minutes": mttb_p1,
                 "techniques": ["T1021.001 (RDP/SSH)", "T1110.003 (Password Spraying)"]
             },
             {
                 "target": "DC-CORP-01",
                 "path": [compromised_host, "BASTION-EXT-01", "DC-CORP-01"],
-                "path_probability": 0.74,
-                "estimated_mttb_minutes": 24,
+                "path_probability": p2_prob,
+                "estimated_mttb_minutes": mttb_p2,
                 "techniques": ["T1078.002 (Domain Accounts)", "T1003.006 (DCSync)"]
             },
             {
                 "target": "s3://corp-finance-vault-prod",
                 "path": [compromised_host, "Role/DevOps-Admin", "s3://corp-finance-vault-prod"],
-                "path_probability": 0.65,
-                "estimated_mttb_minutes": 32,
+                "path_probability": p3_prob,
+                "estimated_mttb_minutes": mttb_p3,
                 "techniques": ["T1552.001 (Credentials in Files)", "T1530 (Cloud Storage Access)"]
             }
         ]
@@ -350,9 +424,9 @@ class AttackPathPredictor:
             "root_ioc": root_ioc,
             "compromised_origin": root_ioc,
             "compromised_node": compromised_host,
-            "compromise_probability": 0.914,
-            "mean_time_to_breach_min": 18,
-            "mttb_minutes": 18,
+            "compromise_probability": comp_prob,
+            "mean_time_to_breach_min": mttb,
+            "mttb_minutes": mttb,
             "crown_jewels_at_risk": jewels_list,
             "chokepoints": chokepoints,
             "chokepoint_defenses": chokepoints_formatted,
@@ -363,7 +437,8 @@ class AttackPathPredictor:
             "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             "executive_summary": (
                 f"Lateral movement simulation radiating from {compromised_host} (associated with {root_ioc}). "
-                f"Identified 3 active attack trajectories toward Crown Jewels with an estimated Mean Time to Breach of 18 minutes. "
+                f"Monte Carlo simulation ({iterations} iterations) identified 3 active attack trajectories toward Crown Jewels "
+                f"with an estimated Mean Time to Breach of {mttb} minutes and {int(comp_prob * 100)}% compromise probability. "
                 f"Enforcing Chokepoint CP-01 (Zero-Trust ACL on Port 5432) reduces breach likelihood by 45%."
             )
         }

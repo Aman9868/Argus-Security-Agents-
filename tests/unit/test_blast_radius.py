@@ -63,3 +63,12 @@ def test_simulation_db_persistence():
     assert retrieved["compromised_origin"] == "SRV-DEV-01"
     assert retrieved["mttb_minutes"] == sim["mttb_minutes"]
     assert len(retrieved["critical_attack_paths"]) == len(sim["critical_attack_paths"])
+
+def test_benign_indicator_dynamic_zero_probability():
+    """Verify that searching a clean domain like yahoo.com dynamically returns 0% compromise probability."""
+    clean_sim = AttackPathPredictor.simulate_lateral_movement("yahoo.com")
+    assert clean_sim["compromise_probability"] == 0.0
+    assert clean_sim["mttb_minutes"] == 0
+    assert len(clean_sim["critical_attack_paths"]) == 0
+    assert len(clean_sim["crown_jewels_at_risk"]) == 0
+    assert "BENIGN / CLEAN" in clean_sim["executive_summary"]

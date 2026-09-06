@@ -244,3 +244,4 @@ window.openAttackPathModal = openAttackPathModal;
 window.runAttackPathSimulation = runAttackPathSimulation;
 window.overlayAttackPathOnGraph = overlayAttackPathOnGraph;
 window.executeChokepointDefense = executeChokepointDefense;
+

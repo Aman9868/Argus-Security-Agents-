@@ -44,3 +44,4 @@ async def test_simulate_attack_path_endpoint():
         sim_data = get_resp.json()
         assert sim_data["simulation_id"] == sim_id
         assert sim_data["compromised_origin"] == "185.220.101.45"
+

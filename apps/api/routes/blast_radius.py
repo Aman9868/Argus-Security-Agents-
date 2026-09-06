@@ -55,3 +55,4 @@ async def get_simulation_by_id(sim_id: str):
     except Exception as e:
         logger.error("Failed to fetch simulation", sim_id=sim_id, error=str(e))
         raise HTTPException(status_code=500, detail="Failed to retrieve simulation.")
+
