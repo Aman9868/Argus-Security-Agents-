@@ -38,69 +38,18 @@
 
       <div class="copilot-scroll-area" id="copilotFeed">
         
-        <!-- Mockup Message 1: Nftables Code Snippet -->
+        <!-- Live Agent Ready Card -->
         <div class="copilot-card">
           <div class="copilot-card-header">
-            <span style="color: #38bdf8; font-family: var(--font-mono);"><i class="fa-solid fa-code"></i> Remediation Artifact</span>
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <button class="card-action-icon-btn" onclick="copyCardText(this)" title="Copy snippet"><i class="fa-regular fa-copy"></i></button>
-              <span class="copilot-timestamp">10:30 AM</span>
-            </div>
+            <div class="copilot-tag-ai"><i class="fa-solid fa-shield-halved"></i> Cyber Sentinel Autonomous Copilot</div>
+            <span class="copilot-timestamp" id="copilotInitTime">LIVE</span>
           </div>
-          <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px;">
-            If you use <strong>nftables</strong>, the quarantine logic can be enforced in a single table:
-          </div>
-          <div class="mockup-code-block">table ip quarantine {
-  chain input {
-    type filter hook input priority 0; policy drop;
-    ip saddr 185.220.101.45 drop;
-  }
-  chain output {
-    type filter hook output priority 0; policy drop;
-    ip daddr 185.220.101.45 log prefix "[SOC-C2-BLOCKED]: " drop;
-  }
-}</div>
-        </div>
-
-        <!-- Mockup Message 2: AI Analysis with Key Findings -->
-        <div class="copilot-card">
-          <div class="copilot-card-header">
-            <div class="copilot-tag-ai"><i class="fa-solid fa-brain"></i> AI Analysis</div>
-            <div style="display: flex; align-items: center; gap: 4px;">
-              <button class="card-action-icon-btn" onclick="copyCardText(this)" title="Copy text"><i class="fa-regular fa-copy"></i></button>
-              <button class="card-action-icon-btn" onclick="openCardInModal(this)" title="Expand in modal reader"><i class="fa-solid fa-up-right-from-square"></i></button>
-              <span class="copilot-timestamp">10:32 AM</span>
-            </div>
-          </div>
-          <div style="font-size: 0.84rem; font-weight: 700; color: #ffffff; margin-bottom: 8px;">Key Findings</div>
-          <div class="findings-checklist">
-            <div class="finding-check-row">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>Detected C2 communication pattern using malicious IP: <code style="color: var(--neon-cyan);">185.220.101.45</code></span>
-            </div>
-            <div class="finding-check-row">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>Matches known malware infrastructure signatures (typical Cobalt Strike / AsyncRAT C2)</span>
-            </div>
-            <div class="finding-check-row">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>Related to domains: <code style="color: var(--neon-cyan);">update-microsoft-s[.]net</code> registered via NameCheap</span>
-            </div>
-            <div class="finding-check-row">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>Outbound telemetry indicates active beaconing (MITRE ATT&CK T1071.001)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mockup Message 3: Agent Actions -->
-        <div class="copilot-card">
-          <div class="copilot-card-header">
-            <div class="copilot-tag-agent"><i class="fa-solid fa-shield-halved"></i> Agent Actions</div>
-            <span class="copilot-timestamp">10:33 AM</span>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #ffffff; margin-bottom: 6px;">
+            Real-Time Defense & Threat Intelligence Active
           </div>
           <div style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;">
-            Triage complete. <strong>3 perimeter entities</strong> flagged for perimeter isolation. Containment policy is pending human approval.
+            Directly connected to live feeds (<strong>AbuseIPDB</strong>, <strong>VirusTotal</strong>, <strong>AlienVault OTX</strong>), <strong>Sigma Rule Engine</strong>, and <strong>Macro Forensics Dissector</strong>.
+            Click any quick action chip below or query any IP, domain, hash, or incident artifact for live triage.
           </div>
         </div>
 
