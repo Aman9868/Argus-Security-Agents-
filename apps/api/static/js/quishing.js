@@ -6,13 +6,30 @@
 
 let currentQuishingAnalysis = null;
 
-async function openQuishingModal(sampleId = 'sample_quishing_m365') {
+async function openQuishingModal(sampleId = null) {
   const modal = document.getElementById('quishingModal');
   if (!modal) return;
   modal.classList.add('active');
 
   await loadQuishingSampleList(sampleId);
-  runQuishingAnalysis(sampleId);
+
+  // Reset to initial clean state: when not searched, show NO data
+  currentQuishingAnalysis = null;
+  const loadingContainer = document.getElementById('quishingLoading');
+  const resultsContainer = document.getElementById('quishingResults');
+  const emptyState = document.getElementById('quishingEmptyState');
+
+  if (loadingContainer) loadingContainer.style.display = 'none';
+  if (resultsContainer) resultsContainer.style.display = 'none';
+  if (emptyState) emptyState.style.display = 'block';
+
+  // Default to Live Dynamic Dissector tab so user can input custom items
+  switchQuishingTab('custom');
+
+  // If a specific sampleId was explicitly requested (not null), run it
+  if (sampleId) {
+    runQuishingAnalysis(sampleId);
+  }
 }
 
 async function loadQuishingSampleList(selectedId) {
@@ -23,9 +40,9 @@ async function loadQuishingSampleList(selectedId) {
     const res = await fetch('/api/phishing/samples');
     if (!res.ok) return;
     const data = await res.json();
-    selectEl.innerHTML = data.samples.map(s => `
-      <option value="${s.sample_id}" ${s.sample_id === selectedId ? 'selected' : ''}>
-        ${s.has_qr_code ? '📷 [QUISH]' : '📧 [EMAIL]'} ${s.subject.slice(0, 38)}...
+    selectEl.innerHTML = data.samples.map((s, idx) => `
+      <option value="${s.sample_id}" ${s.sample_id === selectedId || (!selectedId && idx === 0) ? 'selected' : ''}>
+        ${s.has_qr_code ? '📷 [QUISH]' : '📧 [EMAIL]'} ${s.subject.slice(0, 36)}...
       </option>
     `).join('');
   } catch (err) {
@@ -41,6 +58,9 @@ async function runQuishingAnalysis(sampleId) {
 
   const loadingContainer = document.getElementById('quishingLoading');
   const resultsContainer = document.getElementById('quishingResults');
+  const emptyState = document.getElementById('quishingEmptyState');
+
+  if (emptyState) emptyState.style.display = 'none';
   if (loadingContainer) loadingContainer.style.display = 'flex';
   if (resultsContainer) resultsContainer.style.display = 'none';
 
@@ -287,6 +307,8 @@ async function submitCustomQuishingDissection() {
 
   const loadingContainer = document.getElementById('quishingLoading');
   const resultsContainer = document.getElementById('quishingResults');
+  const emptyState = document.getElementById('quishingEmptyState');
+  if (emptyState) emptyState.style.display = 'none';
   if (loadingContainer) loadingContainer.style.display = 'flex';
   if (resultsContainer) resultsContainer.style.display = 'none';
 

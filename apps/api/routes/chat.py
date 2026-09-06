@@ -14,6 +14,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 
 
 @router.post("", response_model=ChatResponse)
+@router.post("/message", response_model=ChatResponse)
 async def chat_interaction(request: ChatRequest):
     """
     Direct SOC conversational endpoint protected by Guardrails AI:

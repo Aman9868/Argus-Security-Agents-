@@ -164,6 +164,100 @@ class LLMGateway:
                 "pivot_iocs": ["185.220.101.45", "update-microsoft-security.com"]
             })
 
+        # 4. Conversational SOC Copilot Inquiries (Cyber Sentinel)
+        if "cyber sentinel" in system_text or "soc analyst" in system_text:
+            # Check for Summarize intent
+            if "summarize" in user_text or "summary" in user_text:
+                if "185.220.101.45" in user_text or "c2" in user_text:
+                    return (
+                        "### 🛡️ Threat Entity Summary: `185.220.101.45` (Malicious C2 IP)\n\n"
+                        "- **Classification:** High-Priority Command & Control Beaconing Infrastructure\n"
+                        "- **ASN & Origin:** AS60729 Stiftung Erneuerbare Freiheit (Frankfurt, DE)\n"
+                        "- **Associated Domains:** `update-microsoft-security.com`, `microsoft-secure.com`\n"
+                        "- **TTPs:** MITRE ATT&CK **T1071.001** (Web Protocols), **T1566.002** (Spearphishing Link)\n"
+                        "- **Blast Radius:** 3 connected perimeter entities directly resolving to this host.\n\n"
+                        "#### Recommended Immediate Actions:\n"
+                        "1. **Drop Ingress/Egress:** Apply perimeter firewall rule `nft add rule inet filter output ip daddr 185.220.101.45 drop`.\n"
+                        "2. **Revoke Active Tokens:** Invalidate Entra ID/M365 session cookies for any client IP communicating with this host.\n"
+                        "3. **Quarantine Hosts:** Isolate endpoint endpoints exhibiting recurring 120s beaconing telemetry."
+                    )
+                elif "microsoft" in user_text or "domain" in user_text:
+                    return (
+                        "### 🛡️ Threat Entity Summary: `update-microsoft-security.com` (Spoofed FQDN)\n\n"
+                        "- **Classification:** Brand Masquerading / Typosquatted Phishing Domain\n"
+                        "- **Homoglyph Anomaly:** Uses Cyrillic 'і' (U+0456) lookalike substitution.\n"
+                        "- **Registrar & Age:** NameCheap, registered 72 hours prior to initial beacon.\n"
+                        "- **Resolves To:** Active C2 cluster `185.220.101.45` and `103.21.45.77`.\n\n"
+                        "#### Recommended Immediate Actions:\n"
+                        "1. **DNS Sinkhole:** Null-route domain at internal resolvers (`127.0.0.1`).\n"
+                        "2. **Proxy Block:** Stage wildcard domain block across Secure Web Gateways (SWG)."
+                    )
+                else:
+                    return (
+                        "### 🛡️ Incident Forensic Summary & Threat Assessment\n\n"
+                        "**Executive Summary:**\n"
+                        "An active multi-stage intrusion campaign has been correlated across the threat infrastructure graph with high confidence (**94%**).\n\n"
+                        "#### 🔍 Key Correlated Evidence:\n"
+                        "- **Primary C2 Beacon:** `185.220.101.45` actively coordinating TLS-encrypted beaconing.\n"
+                        "- **Masqueraded Landing Pages:** `update-microsoft-security.com` & `microsoft-secure.com`.\n"
+                        "- **Initial Access Vector:** Malicious email delivery (`invoice.docx`) with weaponized macro dropper.\n"
+                        "- **Attribution Overlap:** Tooling and persistence patterns align with **APT29 / Cozy Bear** (TTP T1566 → T1059.005 → T1071.001).\n\n"
+                        "#### ⚡ Recommended SOC Next Steps:\n"
+                        "1. **Enforce Perimeter Drop:** Execute automated nftables rule blocking `185.220.101.45`.\n"
+                        "2. **Deploy DNS Sinkhole:** Redirect rogue domains to isolated corporate loopback.\n"
+                        "3. **Fleet Mailbox Purge:** Remove delivered malicious lure messages across Microsoft 365 / Workspace inboxes."
+                    )
+
+            if "c2" in user_text or "explain c2" in user_text:
+                return (
+                    "### 🌐 C2 Infrastructure Analysis & Beaconing Telemetry\n\n"
+                    "- **Destination:** `185.220.101.45:443` (TCP/TLS)\n"
+                    "- **Beaconing Profile:** Outbound HTTPS POST requests every 120s with ±15% jitter to evade heuristic threshold alerts.\n"
+                    "- **Payload Signature:** Cobalt Strike Malleable C2 HTTP profile masquerading as legitimate Microsoft Telemetry endpoints.\n"
+                    "- **MITRE ATT&CK:** **T1071.001** (Application Layer Protocol: Web Protocols)."
+                )
+
+            if "d3fend" in user_text or "mitigation" in user_text:
+                return (
+                    "### 🛡️ MITRE D3FEND Countermeasure Playbook\n\n"
+                    "1. **D3-OTF (Outbound Traffic Filtering):** Stage perimeter egress block for IP `185.220.101.45`.\n"
+                    "2. **D3-SINK (DNS Sinkholing):** Divert queries for `update-microsoft-security.com` to sinkhole sensor.\n"
+                    "3. **D3-ITR (Inbound Traffic Restriction):** Reject unverified SPF/DKIM inbound messages.\n"
+                    "4. **D3-URA (User Rights Revocation):** Restrict targeted user privileges pending credential rotation."
+                )
+
+            if "osint" in user_text:
+                return (
+                    "### 🌍 Deep OSINT & Infrastructure Pivot Intel\n\n"
+                    "- **Registrar:** NameCheap, Inc. (Privacy Protected)\n"
+                    "- **Hosting Autonomous System:** AS60729 Stiftung Erneuerbare Freiheit (Frankfurt, DE)\n"
+                    "- **Passive DNS:** Observed 4 subdomains created within the last 5 days.\n"
+                    "- **Threat Actor Footprint:** TTPs and infrastructure overlap with Russian state-sponsored threat group **APT29**."
+                )
+
+            if "firewall" in user_text or "iptables" in user_text or "nftables" in user_text:
+                return (
+                    "### 🔒 Automated Perimeter Containment Rules\n\n"
+                    "```bash\n"
+                    "# nftables Egress Drop Rule\n"
+                    "nft add table inet filter\n"
+                    "nft add chain inet filter output { type filter hook output priority 0; policy accept; }\n"
+                    "nft add rule inet filter output ip daddr 185.220.101.45 log prefix \"[SOC-C2-BLOCKED]: \" drop\n\n"
+                    "# iptables Direct Drop Rule\n"
+                    "iptables -A OUTPUT -d 185.220.101.45 -j DROP\n"
+                    "```"
+                )
+
+            # Default contextual analyst response
+            return (
+                f"### 🛡️ Cyber Sentinel Analysis\n\n"
+                f"Reviewed intelligence telemetry regarding **\"{user_text[:60]}\"**.\n\n"
+                f"- **Incident Status:** Active Threat Investigation\n"
+                f"- **Core Infrastructure:** `185.220.101.45` / `update-microsoft-security.com`\n"
+                f"- **Confidence:** 94% (Verified by cross-agent correlation)\n\n"
+                f"Select **Firewall Rule**, **Explain C2**, **D3FEND Mitigations**, or **Summarize** for targeted drilldowns."
+            )
+
         # Default fallback response
         return json.dumps({
             "status": "ANALYSIS_COMPLETE",

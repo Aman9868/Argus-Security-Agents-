@@ -96,11 +96,21 @@ async function sendCopilot() {
   messagesBox.scrollTop = messagesBox.scrollHeight;
 
   try {
-    const resp = await fetch('/api/chat/message', {
+    let resp = await fetch('/api/chat/message', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: query, session_id: 'default' })
     });
+
+    if (resp.status === 404) {
+      // Fallback to /api/chat
+      resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: query, session_id: 'default' })
+      });
+    }
+
     const bubble = document.getElementById('copilotThinkingBubble');
     if (bubble) bubble.remove();
 
@@ -113,15 +123,58 @@ async function sendCopilot() {
   } catch (err) {
     const bubble = document.getElementById('copilotThinkingBubble');
     if (bubble) bubble.remove();
-    appendCopilotMessage('assistant', 'Connection error to AI Copilot API.');
+    appendCopilotMessage('assistant', 'Connection error to AI Copilot API: ' + err.message);
   }
 }
 
 function quickCopilotQuery(promptText) {
   const input = document.getElementById('copilotInput');
-  if (input) {
-    input.value = promptText;
-    if (!copilotWidgetActive) toggleCopilotWidget();
-    sendCopilot();
+  if (!input) return;
+
+  let finalQuery = promptText;
+  // If a node is currently selected on the canvas, contextualize the query!
+  if (window.selectedGraphNode && window.selectedGraphNode.title) {
+    const nodeLabel = window.selectedGraphNode.title;
+    const lowerPrompt = promptText.toLowerCase();
+
+    if (lowerPrompt.includes('summarize')) {
+      finalQuery = `Summarize threat entity "${nodeLabel}" and its blast radius across the incident infrastructure`;
+    } else if (lowerPrompt.includes('c2')) {
+      finalQuery = `Explain C2 communication and beaconing patterns for entity "${nodeLabel}"`;
+    } else if (lowerPrompt.includes('d3fend') || lowerPrompt.includes('mitigation')) {
+      finalQuery = `Detail MITRE D3FEND defensive mitigations and counter-measures for "${nodeLabel}"`;
+    } else if (lowerPrompt.includes('osint')) {
+      finalQuery = `Analyze full OSINT attack surface and threat footprint for "${nodeLabel}"`;
+    } else if (lowerPrompt.includes('firewall') || lowerPrompt.includes('rule')) {
+      finalQuery = `Generate iptables and nftables perimeter containment firewall rules to block "${nodeLabel}"`;
+    }
   }
+
+  input.value = finalQuery;
+  if (!copilotWidgetActive) toggleCopilotWidget();
+  sendCopilot();
 }
+
+// Bind send button and Enter key listeners
+document.addEventListener('DOMContentLoaded', () => {
+  const sendBtn = document.getElementById('copilotSendBtn');
+  if (sendBtn) {
+    sendBtn.onclick = sendCopilot;
+  }
+  const input = document.getElementById('copilotInput');
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendCopilot();
+      }
+    });
+  }
+});
+
+window.sendCopilot = sendCopilot;
+window.quickCopilotQuery = quickCopilotQuery;
+window.toggleCopilotWidget = toggleCopilotWidget;
+window.adjustCopilotFontSize = adjustCopilotFontSize;
+window.toggleWidgetWide = toggleWidgetWide;
+window.toggleWidgetFullscreen = toggleWidgetFullscreen;

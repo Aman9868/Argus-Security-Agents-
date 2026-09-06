@@ -116,8 +116,8 @@
       </div>
 
       <div class="copilot-input-area">
-        <input type="text" id="copilotInput" class="copilot-input" placeholder="Ask a question or request analysis...">
-        <button class="copilot-send-btn" id="copilotSendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+        <input type="text" id="copilotInput" class="copilot-input" placeholder="Ask a question or request analysis..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendCopilot();}">
+        <button class="copilot-send-btn" id="copilotSendBtn" onclick="sendCopilot()"><i class="fa-solid fa-paper-plane"></i></button>
       </div>
     </div>
   </main>

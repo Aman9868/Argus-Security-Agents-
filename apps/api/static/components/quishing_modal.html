@@ -32,9 +32,12 @@
         </div>
         <div id="quishCatalogSelectorWrapper" style="display: flex; align-items: center; gap: 8px;">
           <span style="font-size: 0.72rem; color: var(--text-muted);">Scenario:</span>
-          <select id="quishingSampleSelect" onchange="runQuishingAnalysis(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 250px;">
+          <select id="quishingSampleSelect" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 230px;">
             <!-- Loaded dynamically -->
           </select>
+          <button class="fleet-purge-btn" style="background: rgba(0, 229, 255, 0.2); border: 1px solid var(--neon-cyan); color: #fff; padding: 4px 10px; font-size: 0.74rem;" onclick="runQuishingAnalysis()">
+            <i class="fa-solid fa-magnifying-glass"></i> Analyze Scenario
+          </button>
         </div>
       </div>
 
@@ -59,8 +62,20 @@ URL: https://www.google.com/url?q=https://auth-session.xyz/login"></textarea>
           </button>
         </div>
       </div>
+
+      <!-- Empty / Standby State (When not searched yet) -->
+      <div id="quishingEmptyState" style="text-align: center; padding: 50px 20px; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 8px; margin: 10px 0;">
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.35); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; font-size: 1.6rem; color: var(--neon-cyan);">
+          <i class="fa-solid fa-envelope-open-text"></i>
+        </div>
+        <h3 style="color: #ffffff; font-size: 1rem; font-weight: 700; margin-bottom: 6px;">Standby: No Phishing Analysis Loaded</h3>
+        <p style="color: var(--text-muted); font-size: 0.78rem; max-width: 480px; margin: 0 auto; line-height: 1.5;">
+          Select a catalog threat scenario above and click <strong>Analyze Scenario</strong>, or switch to <strong>Live Dynamic Dissector</strong> to analyze your own custom URL, email headers, or QR matrix.
+        </p>
+      </div>
+
       <!-- Loading State -->
-      <div id="quishingLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+      <div id="quishingLoading" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 2rem; color: var(--neon-cyan);"></i>
         <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Parsing MIME tree, unrolling redirect hops, and analyzing QR payload matrix...</span>
       </div>

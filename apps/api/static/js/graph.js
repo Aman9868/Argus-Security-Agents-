@@ -241,6 +241,7 @@ function initMockupGraph(elements, layoutName = 'preset') {
 
     cy.elements().removeClass('selected-node');
     node.addClass('selected-node');
+    window.selectedGraphNode = data;
 
     if (typeof copilotWidgetActive !== 'undefined' && !copilotWidgetActive) {
       toggleCopilotWidget();
