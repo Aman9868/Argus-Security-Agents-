@@ -63,3 +63,10 @@ class CyberSessionState(TypedDict):
     final_report: Optional[Dict[str, Any]]
     analyst_summary: Optional[str]
 
+    # Supply Chain & SBOM State
+    target_repo: Optional[Dict[str, Any]]
+    sbom_data: Optional[Dict[str, Any]]
+    reachability_results: Optional[List[Dict[str, Any]]]
+    vex_summary: Optional[Dict[str, Any]]
+    remediation_plans: Optional[List[Dict[str, Any]]]
+

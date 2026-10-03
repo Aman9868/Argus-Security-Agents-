@@ -21,6 +21,8 @@ from apps.api.routes.malware import router as malware_router
 from apps.api.routes.phishing import router as phishing_router
 from apps.api.routes.threat_intel import router as threat_intel_router
 from apps.api.routes.detection import router as detection_router
+from apps.api.routes.sbom import router as sbom_router
+from apps.api.routes.lsp import router as lsp_router
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -81,6 +83,8 @@ app.include_router(malware_router, prefix="/api")
 app.include_router(phishing_router, prefix="/api")
 app.include_router(threat_intel_router, prefix="/api")
 app.include_router(detection_router, prefix="/api")
+app.include_router(sbom_router, prefix="/api")
+app.include_router(lsp_router, prefix="/api")
 
 
 # 4. Mount Static Web Dashboard

@@ -10,6 +10,7 @@ from agents.threat_hunt.subgraph import threat_hunt_subgraph
 from agents.osint.subgraph import osint_subgraph
 from agents.phishing.subgraph import phishing_subgraph
 from agents.vuln.subgraph import vuln_subgraph
+from agents.sbom.subgraph import sbom_subgraph
 from gateway.llm.client import llm_gateway
 from gateway.llm.prompts import SUPERVISOR_SYSTEM_PROMPT
 from storage.graph import InvestigationKnowledgeGraph
@@ -56,7 +57,7 @@ async def supervisor_router_node(state: CyberSessionState) -> Dict[str, Any]:
     }
 
 
-def route_decision(state: CyberSessionState) -> Literal["threat_hunt", "osint", "phishing", "vuln", "synthesizer"]:
+def route_decision(state: CyberSessionState) -> Literal["threat_hunt", "osint", "phishing", "vuln", "sbom", "synthesizer"]:
     """Conditional edge router based on supervisor active_agent."""
     agent = state.get("active_agent", "complete").lower()
     if "threat" in agent:
@@ -67,6 +68,8 @@ def route_decision(state: CyberSessionState) -> Literal["threat_hunt", "osint", 
         return "phishing"
     elif "vuln" in agent:
         return "vuln"
+    elif "sbom" in agent or "supply" in agent:
+        return "sbom"
     return "synthesizer"
 
 
@@ -157,6 +160,7 @@ supervisor_builder.add_node("threat_hunt", threat_hunt_subgraph)
 supervisor_builder.add_node("osint", osint_subgraph)
 supervisor_builder.add_node("phishing", phishing_subgraph)
 supervisor_builder.add_node("vuln", vuln_subgraph)
+supervisor_builder.add_node("sbom", sbom_subgraph)
 supervisor_builder.add_node("supervisor_router", supervisor_router_node)
 supervisor_builder.add_node("synthesizer", supervisor_synthesizer_node)
 
@@ -171,6 +175,7 @@ supervisor_builder.add_conditional_edges(
         "osint": "osint",
         "phishing": "phishing",
         "vuln": "vuln",
+        "sbom": "sbom",
         "synthesizer": "synthesizer"
     }
 )
@@ -180,6 +185,7 @@ supervisor_builder.add_edge("threat_hunt", "supervisor_router")
 supervisor_builder.add_edge("osint", "supervisor_router")
 supervisor_builder.add_edge("phishing", "supervisor_router")
 supervisor_builder.add_edge("vuln", "supervisor_router")
+supervisor_builder.add_edge("sbom", "supervisor_router")
 supervisor_builder.add_edge("synthesizer", END)
 
 master_investigation_graph = supervisor_builder.compile()

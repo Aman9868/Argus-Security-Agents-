@@ -56,7 +56,15 @@
           </a>
           <a class="nav-sub-item" id="subNavMalware" href="javascript:void(0)" onclick="openMalwareModal()">
             <i class="fa-solid fa-microchip" style="color: #c084fc;"></i>
-            <span>Payload Dissector</span>
+            <span>★ AI Malware &amp; MLOps</span>
+          </a>
+          <a class="nav-sub-item" id="subNavSbom" href="javascript:void(0)" onclick="openSbomModal()">
+            <i class="fa-solid fa-boxes-packing" style="color: #00e5ff;"></i>
+            <span>★ SBOM &amp; AI-BOM Sentinel</span>
+          </a>
+          <a class="nav-sub-item" id="subNavLsp" href="javascript:void(0)" onclick="openLspModal()">
+            <i class="fa-solid fa-code" style="color: #a855f7;"></i>
+            <span>★ Cyber LSP &amp; Taint Studio</span>
           </a>
           <a class="nav-sub-item" id="subNavArena" href="javascript:void(0)" onclick="openArenaModal()">
             <i class="fa-solid fa-swords" style="color: #ff3366;"></i>
@@ -1143,7 +1151,14 @@
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <select id="malwareSampleSelect" onchange="runMalwareDissection(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 220px;">
+          <input type="file" id="malwareFileInput" style="display: none;" onchange="handleRealFileUpload(event)">
+          <button class="copilot-action-btn" onclick="document.getElementById('malwareFileInput').click()" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 4px 10px; font-size: 0.76rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+            <i class="fa-solid fa-upload"></i> Scan Real Binary
+          </button>
+          <button id="btnAirflowTrigger" class="copilot-action-btn" onclick="triggerAirflowPipeline()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #c084fc; color: #c084fc; padding: 4px 10px; font-size: 0.76rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="Trigger Apache Airflow Automated Retraining DAG">
+            <i class="fa-solid fa-rotate"></i> Airflow DAG
+          </button>
+          <select id="malwareSampleSelect" onchange="runMalwareDissection(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 170px;">
           </select>
           <button class="modal-close-btn" onclick="closeModal('malwareModal')"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -1156,6 +1171,24 @@
         </div>
 
         <div id="malwareResults" style="display: none;">
+          <!-- MLOps & Airflow Pipeline Telemetry Banner -->
+          <div class="mlops-telemetry-banner" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 8px; height: 8px; border-radius: 50%; background: #00e676; box-shadow: 0 0 8px #00e676;"></div>
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px;">Active Model:</span>
+                <span id="mlopsModelName" style="font-family: var(--font-mono); font-size: 0.78rem; color: #ffffff; font-weight: 700; margin-left: 5px;">ArgusMalwareClassifier:Production (v2.0)</span>
+                <span class="shortcut-badge" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-size: 0.65rem; margin-left: 6px;">LightGBM + PySpark</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px; font-family: var(--font-mono); font-size: 0.74rem;">
+              <div><span style="color: var(--text-muted);">ROC-AUC:</span> <strong style="color: #00e676;" id="mlopsAuc">1.0000</strong></div>
+              <div><span style="color: var(--text-muted);">FPR:</span> <strong style="color: #38bdf8;" id="mlopsFpr">&le; 0.001%</strong></div>
+              <div><span style="color: var(--text-muted);">Inference:</span> <strong style="color: #facc15;" id="mlopsLatency">11.4 ms</strong></div>
+              <div><span style="color: var(--text-muted);">Data Drift:</span> <span id="mlopsDrift" style="color: #00e676;"><i class="fa-solid fa-circle-check"></i> Healthy (PSI: 0.018)</span></div>
+            </div>
+          </div>
+
           <!-- Metadata & Entropy Overview -->
           <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 20px;">
             <div class="malware-meta-card">
@@ -1269,6 +1302,71 @@
               <i class="fa-solid fa-shield-halved" style="color: var(--neon-cyan);"></i> Autonomous EDR / XDR Containment Actions
             </h4>
             <div id="malwareRecsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+          </div>
+
+          <!-- 8. Explainable AI (SHAP Feature Attributions) -->
+          <div style="margin-bottom: 20px; background: rgba(15, 23, 42, 0.5); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 6px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h4 style="color: #ffffff; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-chart-simple" style="color: var(--neon-cyan);"></i> Explainable AI (SHAP Tree Decision Attributions)
+              </h4>
+              <span style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-dim);">LIGHTGBM FEATURE CONTRIBUTION WATERFALL</span>
+            </div>
+            <table class="copilot-table-responsive" style="margin: 0;">
+              <thead>
+                <tr>
+                  <th>Telemetry Feature</th>
+                  <th>Extracted Value</th>
+                  <th>Model Probability Impact</th>
+                  <th>Direction</th>
+                </tr>
+              </thead>
+              <tbody id="malwareShapBody">
+                <tr>
+                  <td><code>Section Entropy</code></td>
+                  <td><span style="color: #ff9100; font-family: var(--font-mono);">7.91</span></td>
+                  <td><span style="color: #ff3366; font-weight: 700;">+0.34</span></td>
+                  <td><span class="shortcut-badge tag-critical">MALICIOUS BIAS</span></td>
+                </tr>
+                <tr>
+                  <td><code>Suspicious Win32 APIs</code></td>
+                  <td><span style="color: #ff3366; font-family: var(--font-mono);">8 functions</span></td>
+                  <td><span style="color: #ff3366; font-weight: 700;">+0.28</span></td>
+                  <td><span class="shortcut-badge tag-critical">MALICIOUS BIAS</span></td>
+                </tr>
+                <tr>
+                  <td><code>Injection Primitives</code></td>
+                  <td><span style="color: #ff3366; font-family: var(--font-mono);">3 (VirtualAllocEx)</span></td>
+                  <td><span style="color: #ff3366; font-weight: 700;">+0.25</span></td>
+                  <td><span class="shortcut-badge tag-critical">MALICIOUS BIAS</span></td>
+                </tr>
+                <tr>
+                  <td><code>Packed Header Heuristic</code></td>
+                  <td><span style="color: #facc15; font-family: var(--font-mono);">Yes</span></td>
+                  <td><span style="color: #ff3366; font-weight: 700;">+0.18</span></td>
+                  <td><span class="shortcut-badge tag-critical">MALICIOUS BIAS</span></td>
+                </tr>
+                <tr>
+                  <td><code>Digital Signature</code></td>
+                  <td><span style="color: #94a3b8; font-family: var(--font-mono);">Unsigned</span></td>
+                  <td><span style="color: #ff3366; font-weight: 700;">+0.08</span></td>
+                  <td><span class="shortcut-badge tag-critical">MALICIOUS BIAS</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Multi-Agent Orchestration Action Bridge -->
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+            <button class="copilot-action-btn" onclick="triggerAttackPathSim(); closeModal('malwareModal');" style="background: rgba(255, 145, 0, 0.15); border: 1px solid #ff9100; color: #ff9100; padding: 6px 14px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-fire-flame-curved"></i> Simulate Lateral Movement Blast Radius
+            </button>
+            <button class="copilot-action-btn" onclick="openDeceptionModal(); closeModal('malwareModal');" style="background: rgba(0, 230, 118, 0.15); border: 1px solid #00e676; color: #00e676; padding: 6px 14px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-shield-virus"></i> Deploy Chameleon Honeytoken Trap
+            </button>
+            <button class="copilot-action-btn" onclick="openArenaModal(); closeModal('malwareModal');" style="background: rgba(255, 51, 102, 0.15); border: 1px solid #ff3366; color: #ff3366; padding: 6px 14px; font-size: 0.78rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-swords"></i> Pit in Adversarial Arena (Self-Play)
+            </button>
           </div>
         </div>
       </div>
@@ -1501,6 +1599,302 @@ URL: https://www.google.com/url?q=https://auth-session.xyz/login"></textarea>
     </div>
   </div>
 
+  <!-- 9. Autonomous SBOM & AI-BOM Sentinel Modal -->
+  <div class="modal-overlay" id="sbomModal" onclick="closeModalOnBackdrop(event, 'sbomModal')">
+    <div class="modal-dialog modal-lg" style="max-width: 1080px; width: 96vw;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(0, 229, 255, 0.3); flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(0, 229, 255, 0.15); color: var(--neon-cyan); border: 1px solid rgba(0, 229, 255, 0.4);">
+            <i class="fa-solid fa-boxes-packing"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Autonomous SBOM &amp; AI-BOM Sentinel</span>
+              <span id="sbomNoiseBadge" class="shortcut-badge" style="background: rgba(0, 230, 118, 0.2); border: 1px solid #00e676; color: #00e676;">80% NOISE ELIMINATED</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">GIT CONNECT &bull; AST REACHABILITY &bull; OPENVEX v0.2.0 &bull; CSAF 2.0 &bull; AUTO-REMEDIATION &bull; SLOPSQUATTING GUARD</div>
+          </div>
+        </div>
+
+        <!-- Git Workspace / Remote Repository Selector -->
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <!-- Git Project Selector Bar -->
+          <div id="sbomGitBar" style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase; font-family: var(--font-mono);"><i class="fa-brands fa-git-alt" style="color: #f97316;"></i> Git Target:</span>
+            <select id="sbomGitProjectSelect" onchange="handleProjectSelectChange(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 220px;">
+              <option value="">Loading workspace...</option>
+            </select>
+            <input type="text" id="sbomGitUrlInput" placeholder="Or enter Git URL / clone path..." class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 210px;" onkeydown="if(event.key==='Enter') runGitScan();">
+            <button class="copilot-action-btn" onclick="runGitScan()" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 4px 10px; font-size: 0.76rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+              <i class="fa-solid fa-play"></i> Scan Git
+            </button>
+          </div>
+
+          <button class="copilot-action-btn" onclick="downloadSbomPdf()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; padding: 4px 10px; font-size: 0.76rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;" title="Export Code Scoring style PDF audit report">
+            <i class="fa-solid fa-file-pdf"></i> Export PDF
+          </button>
+
+          <button class="modal-close-btn" onclick="closeModal('sbomModal')"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="max-height: 82vh; overflow-y: auto; padding: 20px;">
+        <div id="sbomLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; gap: 12px;">
+          <i class="fa-solid fa-gear fa-spin" style="font-size: 2rem; color: var(--neon-cyan);"></i>
+          <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-dim);">Connecting to Git repository, parsing dependency manifests, and tracing AST call graphs...</span>
+        </div>
+
+        <div id="sbomResults" style="display: none;">
+          <!-- Git Provenance & Telemetry Banner -->
+          <div id="sbomGitProvenanceBanner" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 229, 255, 0.35); border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <i class="fa-brands fa-git-alt" style="font-size: 1.2rem; color: #f97316;"></i>
+              <div>
+                <span style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Repository:</span>
+                <strong id="gitProvRepoName" style="color: #ffffff; font-size: 0.82rem; margin-left: 5px;">cyber-agent</strong>
+                <span id="gitProvBranch" class="shortcut-badge" style="background: rgba(59, 130, 246, 0.2); border: 1px solid #3b82f6; color: #93c5fd; font-size: 0.65rem; margin-left: 6px;">main</span>
+                <span id="gitProvCommit" class="shortcut-badge" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #d8b4fe; font-size: 0.65rem; font-family: var(--font-mono); margin-left: 4px;">HEAD</span>
+              </div>
+            </div>
+            <div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-dim); display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <div><i class="fa-solid fa-code-commit"></i> <span id="gitProvCommitMsg" style="color: #ffffff;">Latest commit</span></div>
+              <div><i class="fa-solid fa-file-code" style="color: var(--neon-cyan);"></i> Scanned: <strong id="gitProvFilesScanned" style="color: var(--neon-cyan);">0 files</strong></div>
+              <div><i class="fa-solid fa-link" style="color: #38bdf8;"></i> <span id="gitProvRemote" style="color: #94a3b8; font-size: 0.7rem;">Local Repository</span></div>
+            </div>
+          </div>
+
+          <!-- Metric Telemetry Cards Grid -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Components</div>
+              <div id="sbomTotalPkgs" style="font-size: 1.25rem; font-weight: 800; color: #ffffff; font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(192, 132, 252, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: #c084fc; text-transform: uppercase;">AI-BOM Assets</div>
+              <div id="sbomAiAssetsCount" style="font-size: 1.25rem; font-weight: 800; color: #c084fc; font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: #facc15; text-transform: uppercase;">Vulnerabilities</div>
+              <div id="sbomTotalCves" style="font-size: 1.25rem; font-weight: 800; color: #facc15; font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(0, 230, 118, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: #00e676; text-transform: uppercase;">VEX Suppressed</div>
+              <div id="sbomSuppressedCves" style="font-size: 1.25rem; font-weight: 800; color: #00e676; font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 51, 102, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: #ff3366; text-transform: uppercase;">Active Reachable</div>
+              <div id="sbomActiveThreats" style="font-size: 1.25rem; font-weight: 800; color: #ff3366; font-family: var(--font-mono); margin-top: 2px;">0</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(0, 229, 255, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: var(--neon-cyan); text-transform: uppercase;">Noise Reduced</div>
+              <div id="sbomNoiseReduction" style="font-size: 1.25rem; font-weight: 800; color: var(--neon-cyan); font-family: var(--font-mono); margin-top: 2px;">0%</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 10px; text-align: center;">
+              <div style="font-size: 0.68rem; color: #38bdf8; text-transform: uppercase;">Triage Saved</div>
+              <div id="sbomHoursSaved" style="font-size: 1.25rem; font-weight: 800; color: #38bdf8; font-family: var(--font-mono); margin-top: 2px;">0 hrs</div>
+            </div>
+          </div>
+
+          <!-- Navigation Sub-Tabs -->
+          <div style="display: flex; gap: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px; margin-bottom: 16px; flex-wrap: wrap;">
+            <button id="btnSbomTab_reachability" class="copilot-action-btn active" onclick="switchSbomTab('reachability')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-code-fork"></i> AST Reachability &amp; VEX Triage
+            </button>
+            <button id="btnSbomTab_inventory" class="copilot-action-btn" onclick="switchSbomTab('inventory')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-layer-group"></i> CycloneDX &amp; AI-BOM Inventory
+            </button>
+            <button id="btnSbomTab_openvex" class="copilot-action-btn" onclick="switchSbomTab('openvex')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-file-shield"></i> OpenVEX &amp; CSAF Advisory
+            </button>
+            <button id="btnSbomTab_remediation" class="copilot-action-btn" onclick="switchSbomTab('remediation')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-screwdriver-wrench"></i> Autonomous Remediation &amp; PR
+            </button>
+            <button id="btnSbomTab_slopsquat" class="copilot-action-btn" onclick="switchSbomTab('slopsquat')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-shield-halved"></i> AI Slopsquatting Guard
+            </button>
+            <button id="btnSbomTab_gitreport" class="copilot-action-btn" onclick="switchSbomTab('gitreport')" style="padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-radius: 4px;">
+              <i class="fa-solid fa-file-signature" style="color: #38bdf8;"></i> Executive Git Audit Report
+            </button>
+          </div>
+
+          <!-- Tab Panes -->
+          <div id="sbomPane_reachability">
+            <div id="sbomReachabilityList"></div>
+          </div>
+
+          <div id="sbomPane_inventory" style="display: none;">
+            <div id="sbomInventoryList"></div>
+          </div>
+
+          <div id="sbomPane_openvex" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Machine-readable OpenVEX v0.2.0 and CSAF 2.0 documents for audit and compliance automation:</div>
+              <div style="display: flex; gap: 8px;">
+                <button class="copilot-action-btn" onclick="downloadOpenVEX()" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 4px 10px; font-size: 0.74rem; border-radius: 4px; cursor: pointer;">
+                  <i class="fa-solid fa-download"></i> Download OpenVEX (.json)
+                </button>
+                <button class="copilot-action-btn" onclick="copyOpenVex()" style="background: rgba(192, 132, 252, 0.15); border: 1px solid #c084fc; color: #c084fc; padding: 4px 10px; font-size: 0.74rem; border-radius: 4px; cursor: pointer;">
+                  <i class="fa-solid fa-copy"></i> Copy JSON
+                </button>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-cyan); margin-bottom: 4px; font-weight: 700;">OpenVEX (v0.2.0 Spec)</div>
+                <pre id="sbomOpenVexCode" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 12px; font-family: var(--font-mono); font-size: 0.72rem; color: #a5f3fc; max-height: 380px; overflow-y: auto; margin: 0;"></pre>
+              </div>
+              <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: #c084fc; margin-bottom: 4px; font-weight: 700;">CSAF (v2.0 Spec)</div>
+                <pre id="sbomCsafCode" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 12px; font-family: var(--font-mono); font-size: 0.72rem; color: #e9d5ff; max-height: 380px; overflow-y: auto; margin: 0;"></pre>
+              </div>
+            </div>
+          </div>
+
+          <div id="sbomPane_remediation" style="display: none;">
+            <div id="sbomRemediationList"></div>
+          </div>
+
+          <div id="sbomPane_slopsquat" style="display: none;">
+            <div id="sbomSlopsquatList"></div>
+          </div>
+
+          <!-- Executive Git Audit Report Pane -->
+          <div id="sbomPane_gitreport" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+              <div style="font-size: 0.8rem; color: var(--text-dim);">Executive Software Bill of Materials &amp; Supply Chain Security Audit Report:</div>
+              <div style="display: flex; gap: 8px;">
+                <button id="btnDownloadPdf" class="copilot-action-btn" onclick="downloadSbomPdf()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; padding: 5px 14px; font-size: 0.76rem; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                  <i class="fa-solid fa-file-pdf"></i> Download Audit Report (.pdf)
+                </button>
+                <button class="copilot-action-btn" onclick="downloadExecutiveReport()" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 5px 12px; font-size: 0.76rem; border-radius: 4px; cursor: pointer;">
+                  <i class="fa-solid fa-file-arrow-down"></i> Download Report (.md)
+                </button>
+                <button class="copilot-action-btn" onclick="downloadCycloneDX()" style="background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; color: #38bdf8; padding: 5px 12px; font-size: 0.76rem; border-radius: 4px; cursor: pointer;">
+                  <i class="fa-solid fa-file-code"></i> Download CycloneDX (.json)
+                </button>
+              </div>
+            </div>
+            <pre id="sbomGitReportContent" style="background: rgba(0,0,0,0.65); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: 6px; padding: 16px; font-family: var(--font-mono); font-size: 0.76rem; color: #e2e8f0; line-height: 1.5; white-space: pre-wrap; max-height: 440px; overflow-y: auto; margin: 0;"></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. Cyber LSP & Interprocedural Taint Studio Modal -->
+  <div class="modal-overlay" id="lspModal" onclick="closeModalOnBackdrop(event, 'lspModal')">
+    <div class="modal-dialog modal-lg" style="max-width: 1180px; width: 96vw;">
+      <div class="modal-header" style="border-bottom: 1px solid rgba(168, 85, 247, 0.4); flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="kpi-icon-box" style="background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.4);">
+            <i class="fa-solid fa-code"></i>
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.98rem; color: #ffffff; display: flex; align-items: center; gap: 8px;">
+              <span>Argus Cyber LSP Daemon &amp; Interprocedural Taint Studio</span>
+              <span class="shortcut-badge" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #d8b4fe;">LSP 3.17 READY</span>
+              <span class="shortcut-badge" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan);">JSON-RPC STDIO</span>
+            </div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-family: var(--font-mono);">SOURCE-TO-SINK TAINT GRAPH &bull; REAL-TIME AST PARSER &bull; LIVE IN-IDE DIAGNOSTICS &bull; 1-CLICK QUICK-FIX</div>
+          </div>
+        </div>
+
+        <button class="modal-close-btn" onclick="closeModal('lspModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body" style="max-height: 84vh; overflow-y: auto; padding: 18px;">
+        <!-- Top Toolbar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 10px 14px;">
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span style="font-size: 0.74rem; color: var(--text-dim); text-transform: uppercase; font-family: var(--font-mono);"><i class="fa-solid fa-code-fork" style="color: #c084fc;"></i> Template:</span>
+            <select id="lspTemplateSelect" onchange="loadLspTemplate(this.value)" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 340px;">
+              <option value="fastapi_yaml">FastAPI Body &rarr; PyYAML Insecure Deserialization [EXPLOIT SINK]</option>
+              <option value="flask_cmd_injection">Flask Query Param &rarr; Command Injection (os.system) [EXPLOIT SINK]</option>
+              <option value="pickle_rce">Pickle Deserialization (pickle.loads / CWE-502) [EXPLOIT SINK]</option>
+              <option value="static_yaml_safe">Static Constant YAML Argument [SUPPRESSED VEX - NO NOISE]</option>
+              <option value="sanitized_clean">FastAPI with Safe Refactor (yaml.safe_load) [VERIFIED CLEAN]</option>
+            </select>
+            <input type="text" id="lspFilenameInput" class="copilot-input" style="padding: 4px 8px; font-size: 0.76rem; width: 170px;" value="api/routes/config.py" placeholder="file_path.py">
+            <button class="copilot-action-btn" onclick="runLspAnalysis()" style="background: rgba(168, 85, 247, 0.2); border: 1px solid #a855f7; color: #d8b4fe; padding: 4px 10px; font-size: 0.76rem; border-radius: 4px; cursor: pointer;">
+              <i class="fa-solid fa-play"></i> Re-Analyze
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="copilot-action-btn" onclick="copyIdeConfig('vscode')" style="background: rgba(0, 229, 255, 0.15); border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 4px 10px; font-size: 0.72rem; border-radius: 4px; cursor: pointer;">
+              <i class="fa-brands fa-microsoft"></i> VS Code Setup
+            </button>
+            <button class="copilot-action-btn" onclick="copyIdeConfig('neovim')" style="background: rgba(0, 230, 118, 0.15); border: 1px solid #00e676; color: #00e676; padding: 4px 10px; font-size: 0.72rem; border-radius: 4px; cursor: pointer;">
+              <i class="fa-solid fa-terminal"></i> Neovim Setup
+            </button>
+          </div>
+        </div>
+
+        <div id="lspLoading" style="display: none; padding: 20px; text-align: center;">
+          <i class="fa-solid fa-gear fa-spin" style="font-size: 1.5rem; color: #c084fc;"></i>
+          <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim); margin-left: 8px;">Computing interprocedural AST taint paths &amp; LSP diagnostics...</span>
+        </div>
+
+        <div id="lspResults" style="display: block;">
+          <!-- 2-Column Studio Grid -->
+          <div style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px;">
+            
+            <!-- Left Column: Live Active Code Buffer -->
+            <div style="display: flex; flex-direction: column;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-cyan); font-weight: 700; font-family: var(--font-mono);">
+                  <i class="fa-solid fa-file-code"></i> Active Buffer (Live AST Taint Watcher)
+                </span>
+                <span style="font-size: 0.68rem; color: var(--text-muted); font-family: var(--font-mono);">Edit code below to watch diagnostics update in real-time</span>
+              </div>
+              <textarea id="lspCodeEditor" class="copilot-input" style="font-family: var(--font-mono); font-size: 0.76rem; width: 100%; height: 490px; line-height: 1.45; background: rgba(0,0,0,0.7); color: #a5f3fc; border: 1px solid rgba(168, 85, 247, 0.4); border-radius: 6px; padding: 12px; resize: vertical;" spellcheck="false" oninput="runLspAnalysis()"></textarea>
+            </div>
+
+            <!-- Right Column: Taint Path Trace, Diagnostics & QuickFix -->
+            <div style="display: flex; flex-direction: column; gap: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px;">
+              
+              <!-- Verdict & Metric Strip -->
+              <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <div id="lspVerdictBadge"></div>
+                <div style="display: flex; gap: 10px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-dim);">
+                  <span id="lspDiagCount" style="color: #ffffff; font-weight: 700;">0 Diagnostics</span>
+                  <span>&bull;</span>
+                  <span>Latency: <strong style="color: #00e676;">&lt;12ms</strong></span>
+                </div>
+              </div>
+
+              <!-- 1. Source-to-Sink Dataflow Path -->
+              <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: #ff9100; font-weight: 700; font-family: var(--font-mono); margin-bottom: 6px;">
+                  <i class="fa-solid fa-route"></i> Source-to-Sink Taint Flow Path
+                </div>
+                <div id="lspFlowContainer"></div>
+              </div>
+
+              <!-- 2. LSP 3.17 Diagnostics Stream -->
+              <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: #ff3366; font-weight: 700; font-family: var(--font-mono); margin-bottom: 6px;">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Live LSP Diagnostics Stream (textDocument/publishDiagnostics)
+                </div>
+                <div id="lspDiagList"></div>
+              </div>
+
+              <!-- 3. LSP Quick-Fix CodeActions -->
+              <div>
+                <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--neon-cyan); font-weight: 700; font-family: var(--font-mono); margin-bottom: 6px;">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> 1-Click LSP CodeActions (textDocument/codeAction)
+                </div>
+                <div id="lspQuickFixList"></div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================================================
        APPLICATION LOGIC & CYTOSCAPE RENDERING
        ======================================================================== -->
@@ -1513,5 +1907,7 @@ URL: https://www.google.com/url?q=https://auth-session.xyz/login"></textarea>
   <script src="/static/js/blast_radius.js"></script>
   <script src="/static/js/malware.js"></script>
   <script src="/static/js/quishing.js"></script>
+  <script src="/static/js/sbom.js"></script>
+  <script src="/static/js/lsp.js"></script>
 </body>
 </html>

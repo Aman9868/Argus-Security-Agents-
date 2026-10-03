@@ -14,6 +14,7 @@ class AgentRole(str, Enum):
     PHISHING_ANALYST = "phishing_analyst"
     VULN_ANALYST = "vuln_analyst"
     INCIDENT_RESPONDER = "incident_responder"
+    SUPPLY_CHAIN_ANALYST = "supply_chain_analyst"
 
 
 class ToolPermissionDeniedError(Exception):
@@ -43,7 +44,22 @@ AGENT_TOOL_PERMISSIONS: Dict[AgentRole, Set[str]] = {
         "export_stix21_bundle",
         "get_knowledge_graph",
         "block_ip",
-        "quarantine_domain"
+        "quarantine_domain",
+        "generate_sbom",
+        "analyze_reachability",
+        "generate_vex_document",
+        "generate_remediation_patch",
+        "detect_slopsquatting"
+    },
+    AgentRole.SUPPLY_CHAIN_ANALYST: {
+        "generate_sbom",
+        "analyze_reachability",
+        "generate_vex_document",
+        "generate_remediation_patch",
+        "detect_slopsquatting",
+        "check_nvd_cve",
+        "check_cisa_kev",
+        "get_knowledge_graph"
     },
     AgentRole.THREAT_HUNTER: {
         "check_virustotal",

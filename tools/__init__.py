@@ -17,5 +17,15 @@ __all__ = [
     "SigmaRuleEngine",
     "DocumentMacroDissector",
     "PayloadDissectionEngine",
+    "SBOMGenerator",
+    "AIBOMAsset",
+    "SlopsquatDetector",
+    "ReachabilityEngine",
+    "VEXSynthesizer",
+    "RemediationEngine",
 ]
+from tools.sbom import SBOMGenerator, AIBOMAsset, SlopsquatDetector
+from tools.reachability import ReachabilityEngine
+from tools.vex import VEXSynthesizer
+from tools.remediation import RemediationEngine
 

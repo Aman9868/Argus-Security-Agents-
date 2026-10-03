@@ -13,6 +13,10 @@ from tools.vuln import check_nvd_cve, check_cisa_kev
 from tools.containment import block_ip, quarantine_domain
 from tools.network import check_geoip, check_rdap, scan_ports
 from tools.detection import generate_sigma_rule, generate_yara_rule, export_stix21_bundle
+from tools.sbom import SBOMGenerator, AIBOMAsset, SlopsquatDetector
+from tools.reachability import ReachabilityEngine, ReachabilityAnalysisResult
+from tools.vex import VEXSynthesizer
+from tools.remediation import RemediationEngine
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -127,6 +131,64 @@ class ToolGateway:
                     verdict=parameters.get("verdict", "MALICIOUS"),
                     mitre_technique=parameters.get("mitre_technique", "T1071.001"),
                     associated_domain=parameters.get("associated_domain")
+                )
+
+            # Supply Chain & SBOM Tools
+            elif tool_name == "generate_sbom":
+                manifest = parameters.get("manifest", "")
+                proj_name = parameters.get("project_name", "SupplyChainTarget")
+                proj_ver = parameters.get("project_version", "1.0.0")
+                raw_ai = parameters.get("ai_assets", [])
+                ai_assets = [AIBOMAsset(**a) if isinstance(a, dict) else a for a in raw_ai]
+                components = SBOMGenerator.parse_requirements_txt(manifest)
+                bom = SBOMGenerator.build_cyclonedx_bom(proj_name, proj_ver, components, ai_assets)
+                result = ToolResult(
+                    success=True,
+                    data={"bom": bom, "total_components": len(components), "total_ai_assets": len(ai_assets)},
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
+            elif tool_name == "analyze_reachability":
+                manifest_pkgs = parameters.get("manifest_packages", {})
+                source_files = parameters.get("source_files", {})
+                reach_results = ReachabilityEngine.analyze_repository(manifest_pkgs, source_files)
+                result = ToolResult(
+                    success=True,
+                    data={"results": [r.model_dump() for r in reach_results]},
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
+            elif tool_name == "generate_vex_document":
+                proj_name = parameters.get("project_name", "SupplyChainTarget")
+                proj_ver = parameters.get("project_version", "1.0.0")
+                raw_results = parameters.get("reachability_results", [])
+                reach_objs = [ReachabilityAnalysisResult(**r) if isinstance(r, dict) else r for r in raw_results]
+                triage = VEXSynthesizer.synthesize_triage_summary(proj_name, proj_ver, reach_objs)
+                result = ToolResult(
+                    success=True,
+                    data=triage.model_dump(),
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
+            elif tool_name == "generate_remediation_patch":
+                raw_result = parameters.get("reachability_result", {})
+                reach_obj = ReachabilityAnalysisResult(**raw_result) if isinstance(raw_result, dict) else raw_result
+                manifest_text = parameters.get("manifest_text", "")
+                source_files = parameters.get("source_files", {})
+                plan = RemediationEngine.create_remediation_plan(reach_obj, manifest_text, source_files)
+                result = ToolResult(
+                    success=True,
+                    data=plan.model_dump(),
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
+            elif tool_name == "detect_slopsquatting":
+                packages = parameters.get("packages", [])
+                findings = SlopsquatDetector.scan_manifest(packages)
+                result = ToolResult(
+                    success=True,
+                    data={"findings": [f.model_dump() for f in findings], "total_findings": len(findings)},
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
                 )
 
             else:
