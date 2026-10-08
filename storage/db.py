@@ -205,6 +205,57 @@ def init_db():
             )
         """)
 
+        # 11. Credential Leaks Scans Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS credential_scans (
+                id TEXT PRIMARY KEY,
+                target_path TEXT NOT NULL,
+                target_type TEXT NOT NULL,
+                total_files INTEGER DEFAULT 0,
+                total_diffs INTEGER DEFAULT 0,
+                total_findings INTEGER DEFAULT 0,
+                critical_count INTEGER DEFAULT 0,
+                high_count INTEGER DEFAULT 0,
+                medium_count INTEGER DEFAULT 0,
+                low_count INTEGER DEFAULT 0,
+                scan_duration_sec REAL DEFAULT 0.0,
+                recipient_email TEXT,
+                email_sent INTEGER DEFAULT 0,
+                git_branch TEXT,
+                git_commit TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # 12. Credential Leaks Findings & HITL Tasks Table
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS credential_findings (
+                id TEXT PRIMARY KEY,
+                scan_id TEXT NOT NULL,
+                rule_name TEXT NOT NULL,
+                category TEXT NOT NULL,
+                file_path TEXT NOT NULL,
+                line_number INTEGER,
+                commit_sha TEXT,
+                commit_author TEXT,
+                commit_message TEXT,
+                masked_value TEXT NOT NULL,
+                fingerprint TEXT NOT NULL,
+                entropy_score REAL DEFAULT 0.0,
+                severity TEXT NOT NULL,
+                ai_verdict TEXT DEFAULT 'UNASSESSED',
+                ai_confidence REAL DEFAULT 0.0,
+                ai_rationale TEXT,
+                hitl_status TEXT DEFAULT 'PENDING_REVIEW',
+                hitl_token TEXT UNIQUE NOT NULL,
+                analyst_notes TEXT,
+                reviewed_by TEXT,
+                reviewed_at TIMESTAMP,
+                code_snippet TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
         conn.commit()
 
         # Seed initial intelligence if table is empty
@@ -1069,6 +1120,181 @@ def get_all_phishing_investigations(limit: int = 20) -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error("Failed to fetch all phishing investigations", error=str(e))
         return []
+
+
+# ---------------------------------------------------------------------------
+# Credential Leaks & HITL Helpers
+# ---------------------------------------------------------------------------
+
+def save_credential_scan_record(
+    scan_id: str,
+    target_path: str,
+    target_type: str,
+    total_files: int,
+    total_diffs: int,
+    total_findings: int,
+    critical_count: int,
+    high_count: int,
+    medium_count: int,
+    low_count: int,
+    scan_duration_sec: float,
+    recipient_email: Optional[str] = None,
+    email_sent: bool = False,
+    git_branch: Optional[str] = None,
+    git_commit: Optional[str] = None
+) -> str:
+    """Inserts a new credential scan execution record."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT OR REPLACE INTO credential_scans (
+                    id, target_path, target_type, total_files, total_diffs,
+                    total_findings, critical_count, high_count, medium_count,
+                    low_count, scan_duration_sec, recipient_email, email_sent,
+                    git_branch, git_commit
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                scan_id, target_path, target_type, total_files, total_diffs,
+                total_findings, critical_count, high_count, medium_count,
+                low_count, scan_duration_sec, recipient_email, 1 if email_sent else 0,
+                git_branch, git_commit
+            ))
+            conn.commit()
+            return scan_id
+    except Exception as e:
+        logger.error("Failed to save credential scan record", scan_id=scan_id, error=str(e))
+        return scan_id
+
+
+def save_credential_findings_batch(findings: List[Dict[str, Any]]) -> int:
+    """Inserts a batch of detected credential findings with HITL tokens."""
+    if not findings:
+        return 0
+    saved_count = 0
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            for f in findings:
+                cursor.execute("""
+                    INSERT OR REPLACE INTO credential_findings (
+                        id, scan_id, rule_name, category, file_path, line_number,
+                        commit_sha, commit_author, commit_message, masked_value,
+                        fingerprint, entropy_score, severity, ai_verdict,
+                        ai_confidence, ai_rationale, hitl_status, hitl_token,
+                        code_snippet
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    f["finding_id"], f["scan_id"], f["rule_name"], f["category"],
+                    f["file_path"], f.get("line_number"), f.get("commit_sha"),
+                    f.get("commit_author"), f.get("commit_message"), f["masked_value"],
+                    f["fingerprint"], f.get("entropy_score", 0.0), f["severity"],
+                    f.get("ai_verdict", "UNASSESSED"), f.get("ai_confidence", 0.0),
+                    f.get("ai_rationale"), f.get("hitl_status", "PENDING_REVIEW"),
+                    f["hitl_token"], f.get("code_snippet")
+                ))
+                saved_count += 1
+            conn.commit()
+    except Exception as e:
+        logger.error("Failed to save credential findings batch", error=str(e))
+    return saved_count
+
+
+def get_all_credential_scans(limit: int = 50) -> List[Dict[str, Any]]:
+    """Lists past credential scans ordered by newest first."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM credential_scans
+                ORDER BY created_at DESC
+                LIMIT ?
+            """, (limit,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+    except Exception as e:
+        logger.error("Failed to fetch credential scans", error=str(e))
+        return []
+
+
+def get_credential_scan_details(scan_id: str) -> Optional[Dict[str, Any]]:
+    """Fetches scan metadata and associated findings."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM credential_scans WHERE id = ?", (scan_id,))
+            scan_row = cursor.fetchone()
+            if not scan_row:
+                return None
+
+            cursor.execute("""
+                SELECT * FROM credential_findings
+                WHERE scan_id = ?
+                ORDER BY 
+                    CASE severity 
+                        WHEN 'CRITICAL' THEN 1 
+                        WHEN 'HIGH' THEN 2 
+                        WHEN 'MEDIUM' THEN 3 
+                        ELSE 4 
+                    END
+            """, (scan_id,))
+            finding_rows = cursor.fetchall()
+
+            return {
+                "scan": dict(scan_row),
+                "findings": [dict(fr) for fr in finding_rows]
+            }
+    except Exception as e:
+        logger.error("Failed to fetch credential scan details", scan_id=scan_id, error=str(e))
+        return None
+
+
+def get_credential_finding_by_token(token: str) -> Optional[Dict[str, Any]]:
+    """Retrieves a credential finding using its secure HITL token."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM credential_findings WHERE hitl_token = ?", (token,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+    except Exception as e:
+        logger.error("Failed to fetch finding by HITL token", token=token, error=str(e))
+        return None
+
+
+def update_credential_finding_status(
+    finding_id: str,
+    hitl_status: str,
+    analyst_notes: Optional[str] = None,
+    reviewed_by: str = "SOC_ANALYST"
+) -> bool:
+    """Updates HITL status (REMEDIATED, ACCEPTED_RISK, FALSE_POSITIVE)."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE credential_findings
+                SET hitl_status = ?, analyst_notes = ?, reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (hitl_status, analyst_notes or "", reviewed_by, finding_id))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error("Failed to update finding status", finding_id=finding_id, error=str(e))
+        return False
+
+
+def mark_scan_email_sent(scan_id: str) -> bool:
+    """Updates the scan record indicating that the notification email was successfully sent."""
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE credential_scans SET email_sent = 1 WHERE id = ?", (scan_id,))
+            conn.commit()
+            return cursor.rowcount > 0
+    except Exception as e:
+        logger.error("Failed to mark scan email sent", scan_id=scan_id, error=str(e))
+        return False
 
 
 # Initialize DB automatically when imported

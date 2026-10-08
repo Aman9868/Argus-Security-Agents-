@@ -52,6 +52,16 @@ class Settings(BaseSettings):
     RATE_LIMIT_IP_PER_MINUTE: int = 100
     CONTAINMENT_HITL_THRESHOLD: float = 0.75
 
+    # Email & Human-in-the-Loop Notification Settings
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_TLS: bool = True
+    SMTP_FROM_EMAIL: str = "security-sentinel@cyberagent.local"
+    DEFAULT_ALERT_EMAIL: Optional[str] = None
+    HITL_BASE_URL: str = "http://127.0.0.1:8001"
+
     @field_validator("API_PORT", mode="before")
     @classmethod
     def parse_api_port(cls, v):

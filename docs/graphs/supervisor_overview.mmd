@@ -9,14 +9,17 @@ graph TD;
 	osint(osint)
 	phishing(phishing)
 	vuln(vuln)
+	sbom(sbom)
 	supervisor_router(supervisor_router)
 	synthesizer(synthesizer)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> supervisor_router;
 	osint --> supervisor_router;
 	phishing --> supervisor_router;
+	sbom --> supervisor_router;
 	supervisor_router -.-> osint;
 	supervisor_router -.-> phishing;
+	supervisor_router -.-> sbom;
 	supervisor_router -.-> synthesizer;
 	supervisor_router -.-> threat_hunt;
 	supervisor_router -.-> vuln;

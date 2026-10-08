@@ -11,8 +11,10 @@ graph TD;
 	__start__ --> supervisor_router;
 	osint\3aosint_correlator --> supervisor_router;
 	phishing\3aphishing_verdict --> supervisor_router;
+	sbom\3asbom_correlator --> supervisor_router;
 	supervisor_router -.-> osint\3aosint_intake;
 	supervisor_router -.-> phishing\3aphishing_intake;
+	supervisor_router -.-> sbom\3asbom_intake;
 	supervisor_router -.-> synthesizer;
 	supervisor_router -.-> threat_hunt\3ahunt_intake;
 	supervisor_router -.-> vuln\3avuln_intake;
@@ -52,6 +54,19 @@ graph TD;
 	vuln\3avuln_correlator(vuln_correlator)
 	vuln\3avuln_intake --> vuln\3avuln_query;
 	vuln\3avuln_query --> vuln\3avuln_correlator;
+	end
+	subgraph sbom
+	sbom\3asbom_intake(sbom_intake)
+	sbom\3asbom_catalog(sbom_catalog)
+	sbom\3asbom_reachability(sbom_reachability)
+	sbom\3asbom_vex_synthesis(sbom_vex_synthesis)
+	sbom\3asbom_remediation(sbom_remediation)
+	sbom\3asbom_correlator(sbom_correlator)
+	sbom\3asbom_catalog --> sbom\3asbom_reachability;
+	sbom\3asbom_intake --> sbom\3asbom_catalog;
+	sbom\3asbom_reachability --> sbom\3asbom_vex_synthesis;
+	sbom\3asbom_remediation --> sbom\3asbom_correlator;
+	sbom\3asbom_vex_synthesis --> sbom\3asbom_remediation;
 	end
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0

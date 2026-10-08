@@ -70,3 +70,9 @@ class CyberSessionState(TypedDict):
     vex_summary: Optional[Dict[str, Any]]
     remediation_plans: Optional[List[Dict[str, Any]]]
 
+    # Credential Leaks Sentinel State
+    credential_scan_result: Optional[Dict[str, Any]]
+    credential_findings: Optional[List[Dict[str, Any]]]
+    credential_email_delivery: Optional[Dict[str, Any]]
+    recipient_email: Optional[str]
+

@@ -191,6 +191,65 @@ class ToolGateway:
                     execution_time_ms=(time.perf_counter() - start_time) * 1000
                 )
 
+            elif tool_name == "scan_credentials":
+                from tools.credential_scanner import CredentialScanner
+                target_path = parameters.get("target_path", "")
+                scan_git_history = parameters.get("scan_git_history", True)
+                max_commits = parameters.get("max_commits", 15)
+                ai_triage = parameters.get("ai_triage", True)
+                recipient_email = parameters.get("recipient_email")
+
+                scan_res = await CredentialScanner.scan_project_or_directory(
+                    target_path=target_path,
+                    scan_git_history=scan_git_history,
+                    max_commits=max_commits,
+                    ai_triage=ai_triage,
+                    recipient_email=recipient_email
+                )
+                result = ToolResult(
+                    success=True,
+                    data={
+                        "summary": scan_res.summary.model_dump(),
+                        "findings": [f.model_dump() for f in scan_res.findings]
+                    },
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
+            elif tool_name == "send_credential_hitl_email":
+                from services.email_service import EmailService
+                recipient_email = parameters.get("recipient_email", "")
+                scan_id = parameters.get("scan_id", "")
+                target_path = parameters.get("target_path", "")
+                target_type = parameters.get("target_type", "local_directory")
+                total_findings = parameters.get("total_findings", 0)
+                critical_count = parameters.get("critical_count", 0)
+                high_count = parameters.get("high_count", 0)
+                medium_count = parameters.get("medium_count", 0)
+                low_count = parameters.get("low_count", 0)
+                findings = parameters.get("findings", [])
+                git_branch = parameters.get("git_branch")
+                git_commit = parameters.get("git_commit")
+
+                email_res = await EmailService.send_alert_email(
+                    recipient_email=recipient_email,
+                    scan_id=scan_id,
+                    target_path=target_path,
+                    target_type=target_type,
+                    total_findings=total_findings,
+                    critical_count=critical_count,
+                    high_count=high_count,
+                    medium_count=medium_count,
+                    low_count=low_count,
+                    findings=findings,
+                    git_branch=git_branch,
+                    git_commit=git_commit
+                )
+                result = ToolResult(
+                    success=True,
+                    data=email_res,
+                    execution_time_ms=(time.perf_counter() - start_time) * 1000
+                )
+
             else:
                 result = ToolResult(
                     success=False,

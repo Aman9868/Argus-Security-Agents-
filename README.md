@@ -9,7 +9,8 @@
 [![LSP 3.17](https://img.shields.io/badge/IDE_Protocol-LSP_3.17-purple.svg)](https://microsoft.github.io/language-server-protocol/)
 [![CycloneDX 1.6](https://img.shields.io/badge/SBOM-CycloneDX_1.6-blue.svg)](https://cyclonedx.org/)
 [![OpenVEX](https://img.shields.io/badge/Advisory-OpenVEX_v0.2.0-brightgreen.svg)](https://openvex.dev/)
-[![Tests Passing](https://img.shields.io/badge/Tests-95%20Passed-success.svg)](#-test-verification)
+[![OWASP LLM](https://img.shields.io/badge/AI_Security-OWASP_LLM_2026-rose.svg)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+[![Tests Passing](https://img.shields.io/badge/Tests-108%20Passed-success.svg)](#-test-verification)
 
 ---
 
@@ -28,19 +29,20 @@
 
 ## 🌟 Executive Overview
 
-**Argus Security Agents (Cyber Sentinel XDR)** is a state-of-the-art autonomous multi-agent cybersecurity operations platform. Engineered on **LangGraph**, **FastAPI**, and modern **XDR Operations Architecture**, Argus orchestrates specialized AI agents capable of end-to-end incident investigation, cross-subgraph pivoting, proactive cyber deception, supply chain SBOM/AI-BOM governance, and in-editor Language Server Protocol (LSP) code defense.
+**Argus Security Agents (Cyber Sentinel XDR)** is a state-of-the-art autonomous multi-agent cybersecurity operations platform. Engineered on **LangGraph**, **FastAPI**, and modern **XDR Operations Architecture**, Argus orchestrates specialized AI agents capable of end-to-end incident investigation, cross-subgraph pivoting, proactive cyber deception, supply chain SBOM/AI-BOM governance, in-editor Language Server Protocol (LSP) code defense, and enterprise AI Security Posture Management (AI-SPM).
 
 ### Key Capabilities at a Glance:
 1. **Real-Time Cyber LSP Daemon (Language Server Protocol 3.17)**: High-performance background LSP daemon (`python -m tools.lsp.server`) providing live AST interprocedural taint tracking directly into VS Code, Cursor, and Neovim; highlights untrusted user inputs flowing to dangerous sinks (`yaml.load`, `pickle.loads`, `os.system`) with 1-click QuickFix CodeActions.
 2. **Autonomous SBOM & AI-BOM Sentinel with OpenVEX Triage**: CycloneDX 1.6 & SPDX dependency cataloging with AST call-graph reachability, eliminating up to **81% of vulnerability alert fatigue**; audits AI models (`.safetensors` vs pickle RCE), MCP tools, and flags AI slopsquatting package lures; exports exact Code Scoring-style multi-page PDF audit reports.
-3. **Autonomous Adversarial Arena (Red vs. Blue Self-Play)**: Pits Red Agent adversary emulation (APT29, FIN7, Lazarus Group) against Blue Agent defenders in multi-round duels, calculating real-time Time-to-Detect (TTD ms) and synthesizing verified Sigma detection rules.
-4. **Autonomous Attack Path & Blast Radius Predictor**: Monte Carlo simulation of lateral movement radiating from an IOC or compromised host, calculating reachability to Crown Jewel databases, Domain Controllers, and Cloud buckets within 1-3 pivot hops; computes Mean Time to Breach (MTTB in min); identifies proactive "Chokepoint Defenses"; and overlays glowing dashed amber paths directly onto Cytoscape.js.
-5. **Autonomous Binary & Payload Dissection Agent (Static Reverse Engineering)**: Safe static reverse engineering of malicious payloads (`invoice.docx`, `stager.exe`, `rat_client.bin`), extracting section Shannon entropy scores, identifying suspicious Win32 APIs (`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`), de-obfuscating strings (Base64/XOR/ROT13), and synthesizing dynamic YARA-L memory rules.
-6. **Generative Chameleon Honeytokens & Deception Sinks**: Dynamically deploys contextual decoy credentials (fake AWS keys, canary database strings, decoy JWTs) to bait and trap lateral movement attempts.
-7. **GraphRAG Multi-Hop Deep Threat Hunting**: Recursive 3-hop graph traversal uncovering hidden C2 infrastructure, bulletproof hosting networks, and shared registrant footprints.
-8. **Dual Threat Infrastructure Visualization**: High-resolution interactive Cytoscape.js threat graph coupled with a Leaflet & D3 cyber world map displaying real-time geographic attack origin telemetry.
-9. **Human-in-the-Loop (HITL) Containment Gateway**: Strict RBAC-enforced safety policies preventing unverified quarantine actions while allowing sub-second containment when approved.
-10. **Enterprise Guardrails AI & PII Masking**: Real-time interception of prompt injections, jailbreaks, and sensitive internal IP topology leaks.
+3. **Autonomous AI Red-Teaming & AI-SPM Studio (OWASP LLM 2026)**: Automated adversarial benchmarking of AI guardrails, pre-ingestion RAG document poisoning scanner (zero-width steganography, hidden HTML overrides, markdown image exfil beacons), Second-Order LOTA (Living off the Agent) tool immunity, and multi-turn Crescendo authority drift simulation.
+4. **Autonomous Adversarial Arena (Red vs. Blue Self-Play)**: Pits Red Agent adversary emulation (APT29, FIN7, Lazarus Group) against Blue Agent defenders in multi-round duels, calculating real-time Time-to-Detect (TTD ms) and synthesizing verified Sigma detection rules.
+5. **Autonomous Attack Path & Blast Radius Predictor**: Monte Carlo simulation of lateral movement radiating from an IOC or compromised host, calculating reachability to Crown Jewel databases, Domain Controllers, and Cloud buckets within 1-3 pivot hops; computes Mean Time to Breach (MTTB in min); identifies proactive "Chokepoint Defenses"; and overlays glowing dashed amber paths directly onto Cytoscape.js.
+6. **Autonomous Binary & Payload Dissection Agent (Static Reverse Engineering)**: Safe static reverse engineering of malicious payloads (`invoice.docx`, `stager.exe`, `rat_client.bin`), extracting section Shannon entropy scores, identifying suspicious Win32 APIs (`VirtualAllocEx`, `WriteProcessMemory`, `CreateRemoteThread`), de-obfuscating strings (Base64/XOR/ROT13), and synthesizing dynamic YARA-L memory rules.
+7. **Generative Chameleon Honeytokens & Deception Sinks**: Dynamically deploys contextual decoy credentials (fake AWS keys, canary database strings, decoy JWTs) to bait and trap lateral movement attempts.
+8. **GraphRAG Multi-Hop Deep Threat Hunting**: Recursive 3-hop graph traversal uncovering hidden C2 infrastructure, bulletproof hosting networks, and shared registrant footprints.
+9. **Dual Threat Infrastructure Visualization**: High-resolution interactive Cytoscape.js threat graph coupled with a Leaflet & D3 cyber world map displaying real-time geographic attack origin telemetry.
+10. **Human-in-the-Loop (HITL) Containment Gateway**: Strict RBAC-enforced safety policies preventing unverified quarantine actions while allowing sub-second containment when approved.
+11. **Enterprise Guardrails AI & PII Masking**: Real-time interception of prompt injections, jailbreaks, and sensitive internal IP topology leaks.
 
 ---
 
@@ -197,6 +199,15 @@ Argus features a native **Language Server Protocol (LSP 3.17)** background daemo
 - **1-Click LSP Quick-Fix CodeActions**: Provides standard `CodeAction` quick-fixes (`Alt + Enter`) that automatically rewrite vulnerable calls (e.g. `yaml.load` -> `yaml.safe_load`) in the active buffer.
 - **Dual-Mode Operation**: Run via stdio (`python -m tools.lsp.server`) or interactively in the Web Dashboard via the **Cyber LSP & Taint Studio**.
 
+## 🧠 Autonomous AI Red-Teaming & AI-SPM Studio (OWASP LLM 2026)
+
+Argus features an automated **AI Security Posture Management (AI-SPM)** and adversarial red-teaming arena engineered to audit enterprise LLMs, agents, and RAG pipelines against the OWASP Top 10 for LLMs:
+- **Standardized OWASP LLM Benchmark Suite**: Probes resilience against Direct Prompt Injection (LLM01), Sensitive Information / Canary Extraction (LLM02), Excessive Agency & LOTA Tool Abuse (LLM06), System Prompt Leakage (LLM07), and Vector/Embedding Weaknesses (LLM08).
+- **RAG Document & Ingestion Inspector**: Scans pre-embedding text chunks for steganographic zero-width unicode characters (`\u200b`, `\u200c`, `\u200d`, `\ufeff`), concealed HTML/CSS comment injection blocks, and Markdown exfiltration beacon tags (`![beacon](https://.../?exfil=...)`), returning character-level annotations and defanged output.
+- **Second-Order LOTA (Living off the Agent) Immune Guard**: Validates agent tool invocation arguments in real time to prevent indirect prompt injection from executing destructive shell commands (`rm -rf`, piped bash, shadow files) or unauthorized SQL queries.
+- **Crescendo Multi-Turn Escalation Simulator**: Emulates advanced conversational drift (benign rapport -> authority assertion -> boundary override) to verify multi-turn guardrail efficacy.
+- **Executive AI-SPM Audit Reports & Scorecards**: Calculates deterministic AI Security Scores (0-100, Letter Grades A+ through F), sub-millisecond intercept latency, and exportable JSON/Markdown compliance roadmaps.
+
 ---
 
 ## 📁 Repository Structure
@@ -215,6 +226,7 @@ cyber-agent/
 │   └── api/
 │       ├── main.py          # FastAPI application entrypoint
 │       ├── routes/          # Modular API route controllers
+│       │   ├── ai_redteam.py # AI Red-Teaming & AI-SPM endpoints
 │       │   ├── arena.py     # Adversarial Arena endpoints
 │       │   ├── blast_radius.py # Attack Path & Blast Radius endpoints
 │       │   ├── chat.py      # Guardrail-protected chat
@@ -227,6 +239,7 @@ cyber-agent/
 │       └── static/          # Segregated high-performance web dashboard
 │           ├── css/         # Modular styles (styles.css)
 │           ├── js/          # Segregated client orchestrators
+│           │   ├── ai_redteam.js # AI Red-Teaming & AI-SPM controller
 │           │   ├── app.js
 │           │   ├── arena.js
 │           │   ├── blast_radius.js
@@ -246,6 +259,11 @@ cyber-agent/
 ├── storage/
 │   └── db.py                # SQLite persistence
 ├── tools/
+│   ├── ai_redteam/          # AI Red-Teaming & AI-SPM Suite
+│   │   ├── benchmark_suites.py # OWASP LLM Top 10 curated probes & Crescendo
+│   │   ├── evaluator.py     # Benchmark execution, grading & scoring engine
+│   │   ├── models.py        # Pydantic v2 schemas for AI-SPM
+│   │   └── rag_scanner.py   # Zero-width stego & indirect injection scanner
 │   ├── blast_radius.py      # Monte Carlo lateral attack path & chokepoint engine
 │   ├── deception.py         # Chameleon honeytoken generator
 │   ├── git_scanner.py       # Workspace discovery & shallow Git clone engine
@@ -260,8 +278,8 @@ cyber-agent/
 │   ├── sbom.py              # CycloneDX 1.6, AI-BOM & Slopsquatting guard
 │   └── vex.py               # OpenVEX v0.2.0 & CSAF 2.0 synthesizer
 └── tests/
-    ├── integration/         # API, supervisor, SBOM, and LSP server tests
-    └── unit/                # Engine, permissions, taint, and tool unit tests
+    ├── integration/         # API, supervisor, SBOM, LSP, and AI redteam tests
+    └── unit/                # Engine, permissions, taint, AI redteam, and tool tests
 ```
 
 ---
@@ -318,9 +336,11 @@ pytest tests/ -v
 ```
 
 ```
-======================= 95 passed, 32 warnings in 4.53s =======================
+======================= 108 passed, 130 warnings in 5.17s =======================
 ```
 
+- `test_ai_redteam.py`: OWASP LLM Top 10 benchmark suite execution, grading, LOTA tool rejection, and RAG document scanning.
+- `test_ai_redteam_api.py`: FastAPI endpoints for red-team benchmarks, RAG inspection, LOTA tool audits, Crescendo simulation, and scorecard generation.
 - `test_lsp_taint.py`: Interprocedural AST taint flow tracking, smart constant suppression, sanitizers, and TextEdit generation.
 - `test_lsp_server.py`: JSON-RPC 2.0 stdio LSP 3.17 daemon lifecycle, hover docs, diagnostics, and codeActions.
 - `test_sbom_agent.py`: AST call-graph reachability analysis, CycloneDX 1.6 cataloging, and OpenVEX justification synthesis.
@@ -359,6 +379,12 @@ pytest tests/ -v
 | `POST` | `/api/lsp/analyze` | Live AST taint flow analysis with QuickFix suggestions |
 | `POST` | `/api/lsp/quick-fix` | Applies AST-verified TextEdits and validates taint resolution |
 | `GET` | `/api/lsp/capabilities` | Returns LSP 3.17 server capabilities and IDE configuration snippets |
+| `GET` | `/api/ai-redteam/suites` | Lists available OWASP LLM Top 10 benchmark categories & probes |
+| `POST` | `/api/ai-redteam/run` | Executes adversarial benchmark and generates AI-SPM audit report |
+| `POST` | `/api/ai-redteam/scan-rag` | Scans RAG documents for zero-width unicode, indirect injection & beacons |
+| `POST` | `/api/ai-redteam/test-tool-call` | Audits agent tool parameters against LOTA immune guardrails |
+| `POST` | `/api/ai-redteam/test-crescendo` | Simulates multi-turn Crescendo authority drift and measures defense turn |
+| `GET` | `/api/ai-redteam/scorecard` | Generates executive OWASP LLM compliance scorecard & roadmap |
 
 ---
 

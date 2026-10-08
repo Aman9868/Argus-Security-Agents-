@@ -15,6 +15,7 @@ class AgentRole(str, Enum):
     VULN_ANALYST = "vuln_analyst"
     INCIDENT_RESPONDER = "incident_responder"
     SUPPLY_CHAIN_ANALYST = "supply_chain_analyst"
+    CREDENTIAL_ANALYST = "credential_analyst"
 
 
 class ToolPermissionDeniedError(Exception):
@@ -49,7 +50,18 @@ AGENT_TOOL_PERMISSIONS: Dict[AgentRole, Set[str]] = {
         "analyze_reachability",
         "generate_vex_document",
         "generate_remediation_patch",
-        "detect_slopsquatting"
+        "detect_slopsquatting",
+        "scan_credentials",
+        "triage_credentials_llm",
+        "send_credential_hitl_email",
+        "correlate_credential_kg"
+    },
+    AgentRole.CREDENTIAL_ANALYST: {
+        "scan_credentials",
+        "triage_credentials_llm",
+        "send_credential_hitl_email",
+        "correlate_credential_kg",
+        "get_knowledge_graph"
     },
     AgentRole.SUPPLY_CHAIN_ANALYST: {
         "generate_sbom",

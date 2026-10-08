@@ -28,6 +28,45 @@
       padding: 0;
     }
 
+    /* ==========================================================================
+       GLOBAL SLEEK CYBER SCROLLBARS (ZERO NATIVE GREY ARROWS & TRACKS)
+       ========================================================================== */
+    *::-webkit-scrollbar-button {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    *::-webkit-scrollbar-track {
+      background: rgba(6, 10, 20, 0.7);
+      border-radius: 4px;
+    }
+
+    *::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.25);
+      border-radius: 4px;
+      border: 1px solid rgba(0, 229, 255, 0.12);
+    }
+
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+    }
+
+    *::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(0, 229, 255, 0.25) rgba(6, 10, 20, 0.7);
+    }
+
     body {
       background-color: var(--bg-base);
       color: var(--text-main);
@@ -48,8 +87,39 @@
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      z-index: 100;
+      z-index: 1000;
       overflow-y: auto;
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s ease;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb {
+      background: rgba(0, 229, 255, 0.2);
+      border-radius: 4px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar-thumb:hover {
+      background: var(--neon-cyan);
+    }
+
+    .sidebar-mobile-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 15, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+    }
+
+    .sidebar-mobile-backdrop.active {
+      display: block;
     }
 
     .brand-logo-area {
